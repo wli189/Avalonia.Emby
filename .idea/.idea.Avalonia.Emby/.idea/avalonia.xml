@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AvaloniaProject">
+    <option name="projectPerEditor">
+      <map>
+        <entry key="Avalonia.Emby/App.axaml" value="Avalonia.Emby/Avalonia.Emby.csproj" />
+        <entry key="Avalonia.Emby/Icons.axaml" value="Avalonia.Emby/Avalonia.Emby.csproj" />
+        <entry key="Avalonia.Emby/Views/AddServerWindow.axaml" value="Avalonia.Emby/Avalonia.Emby.csproj" />
+        <entry key="Avalonia.Emby/Views/MainWindow.axaml" value="Avalonia.Emby/Avalonia.Emby.csproj" />
+        <entry key="Avalonia.Emby/Views/ServerInput.axaml" value="Avalonia.Emby/Avalonia.Emby.csproj" />
+        <entry key="Avalonia.Emby/Views/ServerList.axaml" value="Avalonia.Emby/Avalonia.Emby.csproj" />
+      </map>
+    </option>
+  </component>
+</project>
