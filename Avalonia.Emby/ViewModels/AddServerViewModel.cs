@@ -266,9 +266,38 @@ public class AddServerViewModel : ViewModelBase
             ShowMode = FlyoutShowMode.Transient,
             VerticalOffset = 5,
         };
-        
+
+        var content = (TextBlock)flyout.Content;
+        var animation = new Animation.Animation
+        {
+            Duration = TimeSpan.FromSeconds(2),
+            Children =
+            {
+                new KeyFrame
+                {
+                    Cue = new Cue(0),
+                    Setters = { new Setter(TextBlock.OpacityProperty, 0.0) }
+                },
+                new KeyFrame
+                {
+                    Cue = new Cue(0.2),
+                    Setters = { new Setter(TextBlock.OpacityProperty, 1.0) }
+                },
+                new KeyFrame
+                {
+                    Cue = new Cue(0.8),
+                    Setters = { new Setter(TextBlock.OpacityProperty, 1.0) }
+                },
+                new KeyFrame
+                {
+                    Cue = new Cue(1),
+                    Setters = { new Setter(TextBlock.OpacityProperty, 0.0) }
+                }
+            }
+        };
+
         flyout.ShowAt(window);
-        await Task.Delay(2000);
+        await animation.RunAsync(content);
         flyout.Hide();
     }
 }
