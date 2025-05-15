@@ -11,7 +11,9 @@
         Width="550" Height="500"
         CanResize="False"
         WindowStartupLocation="CenterScreen"
-        xmlns:views="clr-namespace:Avalonia.Emby.Views">
+        xmlns:views="clr-namespace:Avalonia.Emby.Views"
+        xmlns:vm="clr-namespace:Avalonia.Emby.ViewModels"
+        x:DataType="vm:AddServerViewModel">
         
     
         <Panel>

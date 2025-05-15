@@ -6,9 +6,11 @@ using System.Text.Json;
 using System.Text;
 using System.Threading.Tasks;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Platform;
 using ReactiveUI;
 using System.Text.Json.Serialization;
+using Avalonia.Media;
 using Emby.ApiClient.Model;
 
 namespace Avalonia.Emby.ViewModels;
@@ -23,7 +25,7 @@ public class AddServerViewModel : ViewModelBase
     private const string DeviceName = "Desktop";
     private const string Version = "1.0.0.0";
     private readonly string _deviceId = Guid.NewGuid().ToString();
-    private readonly HttpClient _httpClient = new HttpClient();
+    private readonly HttpClient _httpClient = new HttpClient() { Timeout = TimeSpan.FromSeconds(5) };
 
     public string ServerUrl
     {
@@ -73,8 +75,15 @@ public class AddServerViewModel : ViewModelBase
             try
             {
                 // Validate inputs
-                if (string.IsNullOrWhiteSpace(ServerUrl) || string.IsNullOrWhiteSpace(Username))
+                if (string.IsNullOrWhiteSpace(ServerUrl))
                 {
+                    await flyoutBox("Please enter a server URL", window);
+                    return;
+                }
+
+                if (string.IsNullOrWhiteSpace(Username))
+                {
+                    await flyoutBox("Please enter a username", window);
                     return;
                 }
 
@@ -94,9 +103,8 @@ public class AddServerViewModel : ViewModelBase
                     authResult.AccessToken
                 );
 
-                Console.WriteLine($"Server: Name={server.Name}, URL={server.Url}, Username={server.Username}, AccessToken={server.AccessToken}");
-
-                Console.WriteLine($"Connected to {server.Name}");
+                // Console.WriteLine($"Server: Name={server.Name}, URL={server.Url}, Username={server.Username}, AccessToken={server.AccessToken}");
+                // Console.WriteLine($"Connected to {server.Name}");
                 ServerList.Add(server); // Add to ServerList
                 AddServer = server;
 
@@ -105,15 +113,18 @@ public class AddServerViewModel : ViewModelBase
             }
             catch (HttpRequestException ex)
             {
-                Console.WriteLine($"Connection error: {ex}");
+                var message = ex.StatusCode != null
+                    ? $"Connection error: {(int)ex.StatusCode} - {ex.Message}"
+                    : $"Connection error: {ex.Message}";
+                await flyoutBox(message, window);
             }
             catch (TaskCanceledException)
             {
-                Console.WriteLine("Connection error: Request timed out");
+                await flyoutBox("Connection timed out", window);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Connection error: {ex}");
+                await flyoutBox($"Error: {ex.Message}", window);
             }
         });
 
@@ -173,7 +184,6 @@ public class AddServerViewModel : ViewModelBase
         authResponse.EnsureSuccessStatusCode();
 
         var authJson = await authResponse.Content.ReadAsStringAsync();
-        // Console.WriteLine($"Auth Response: {authJson}"); // Add debug logging
 
         var authResult = JsonSerializer.Deserialize<AuthResponse>(authJson);
 
@@ -183,7 +193,7 @@ public class AddServerViewModel : ViewModelBase
     private async Task<ServerInfo> getServerInfo(string baseUrl, string accessToken)
     {
 
-        
+
         var serverInfoRequest = new HttpRequestMessage(HttpMethod.Get, $"{baseUrl}/System/Info")
         {
             Headers =
@@ -226,5 +236,24 @@ public class AddServerViewModel : ViewModelBase
 
         [JsonPropertyName("Name")]
         public string Name { get; set; } = string.Empty;
+    }
+
+    private async Task flyoutBox(string message, Window window)
+    {
+        var flyout = new Flyout
+        {
+            Content = new TextBlock
+            {
+                Text = message,
+                TextWrapping = TextWrapping.Wrap,
+                MaxWidth = 300
+            },
+            Placement = PlacementMode.Bottom,
+            ShowMode = FlyoutShowMode.Transient,
+            VerticalOffset = 5
+        };
+        flyout.ShowAt(window);
+        await Task.Delay(3000);
+        flyout.Hide();
     }
 }
