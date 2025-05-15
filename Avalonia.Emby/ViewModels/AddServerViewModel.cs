@@ -131,14 +131,17 @@ public class AddServerViewModel : ViewModelBase
                     ? $"Connection error: {(int)ex.StatusCode} - {ex.Message}"
                     : $"Connection error: {ex.Message}";
                 await flyoutBox(message, window);
+                IsConnecting = false;
             }
             catch (TaskCanceledException)
             {
                 await flyoutBox("Connection timed out", window);
+                IsConnecting = false;
             }
             catch (Exception ex)
             {
                 await flyoutBox($"Error: {ex.Message}", window);
+                IsConnecting = false;
             }
         });
 
@@ -268,36 +271,21 @@ public class AddServerViewModel : ViewModelBase
         };
 
         var content = (TextBlock)flyout.Content;
-        var animation = new Animation.Animation
+        content.Transitions = new Transitions
         {
-            Duration = TimeSpan.FromSeconds(2),
-            Children =
+            new DoubleTransition
             {
-                new KeyFrame
-                {
-                    Cue = new Cue(0),
-                    Setters = { new Setter(TextBlock.OpacityProperty, 0.0) }
-                },
-                new KeyFrame
-                {
-                    Cue = new Cue(0.2),
-                    Setters = { new Setter(TextBlock.OpacityProperty, 1.0) }
-                },
-                new KeyFrame
-                {
-                    Cue = new Cue(0.8),
-                    Setters = { new Setter(TextBlock.OpacityProperty, 1.0) }
-                },
-                new KeyFrame
-                {
-                    Cue = new Cue(1),
-                    Setters = { new Setter(TextBlock.OpacityProperty, 0.0) }
-                }
+                Property = TextBlock.OpacityProperty,
+                Duration = TimeSpan.FromSeconds(0.2)
             }
         };
-
+        
+        content.Opacity = 0;
         flyout.ShowAt(window);
-        await animation.RunAsync(content);
+        content.Opacity = 1;
+        await Task.Delay(1000);
+        content.Opacity = 0;
+        await Task.Delay(200);
         flyout.Hide();
     }
 }
