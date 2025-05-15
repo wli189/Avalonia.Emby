@@ -30,5 +30,11 @@
                 <Panel Margin="40">
                         <views:ServerInput/>
                 </Panel>
+                <ProgressBar IsIndeterminate="True" 
+                             Width="550" 
+                             Height="2"
+                             HorizontalAlignment="Center"
+                             VerticalAlignment="Bottom"
+                             IsVisible="{Binding IsConnecting}"/>
         </Panel>
 </Window>

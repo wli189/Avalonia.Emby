@@ -10,7 +10,9 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Platform;
 using ReactiveUI;
 using System.Text.Json.Serialization;
+using Avalonia.Animation;
 using Avalonia.Media;
+using Avalonia.Styling;
 using Emby.ApiClient.Model;
 
 namespace Avalonia.Emby.ViewModels;
@@ -21,6 +23,7 @@ public class AddServerViewModel : ViewModelBase
     private string _password;
     private string _serverUrl;
     private string _serverName;
+    private bool _isConnecting;
     private const string ClientName = "Avalonia.Emby";
     private const string DeviceName = "Desktop";
     private const string Version = "1.0.0.0";
@@ -54,6 +57,12 @@ public class AddServerViewModel : ViewModelBase
         }
     }
 
+    public bool IsConnecting
+    {
+        get => _isConnecting;
+        set => this.RaiseAndSetIfChanged(ref _isConnecting, value);
+    }
+
     private ServerViewModel? _addServer;
 
     public ObservableCollection<ServerViewModel> ServerList { get; } = new();
@@ -74,16 +83,20 @@ public class AddServerViewModel : ViewModelBase
         {
             try
             {
+                IsConnecting = true;
+
                 // Validate inputs
                 if (string.IsNullOrWhiteSpace(ServerUrl))
                 {
                     await flyoutBox("Please enter a server URL", window);
+                    IsConnecting = false;
                     return;
                 }
 
                 if (string.IsNullOrWhiteSpace(Username))
                 {
                     await flyoutBox("Please enter a username", window);
+                    IsConnecting = false;
                     return;
                 }
 
@@ -109,6 +122,7 @@ public class AddServerViewModel : ViewModelBase
                 AddServer = server;
 
                 // Close the dialog
+                IsConnecting = false;
                 window?.Close();
             }
             catch (HttpRequestException ex)
@@ -246,14 +260,15 @@ public class AddServerViewModel : ViewModelBase
             {
                 Text = message,
                 TextWrapping = TextWrapping.Wrap,
-                MaxWidth = 300
+                MaxWidth = 300,
             },
             Placement = PlacementMode.Bottom,
             ShowMode = FlyoutShowMode.Transient,
-            VerticalOffset = 5
+            VerticalOffset = 5,
         };
+        
         flyout.ShowAt(window);
-        await Task.Delay(3000);
+        await Task.Delay(2000);
         flyout.Hide();
     }
 }
