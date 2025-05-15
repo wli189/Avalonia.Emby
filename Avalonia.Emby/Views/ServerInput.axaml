@@ -12,25 +12,27 @@
                 VerticalAlignment="Center" 
                 Width="300">
         <Label Content="Server Name"
-               FontSize="16"/>
+               FontSize="16"
+               FontFamily="Arial"/>
         <TextBox Watermark="Enter Server Name"
                  Text="{Binding ServerName}"/>
         
         <Label Content="Server URL"
-               FontSize="16"/>
+               FontSize="16"
+               FontFamily="Arial"/>
         <TextBox Watermark="http(s)://localhost:port"
                  Text="{Binding ServerUrl}">
         </TextBox>
         
         <Label Content="Username"
                FontSize="16"
-               Margin="0 10 0 0"/>
+               FontFamily="Arial"/>
         <TextBox Watermark="Enter username"
                  Text="{Binding Username}"/>
                         
         <Label Content="Password"
                FontSize="16"
-               Margin="0 10 0 0"/>
+               FontFamily="Arial"/>
         <TextBox Watermark="Enter password"
                  Classes="revealPasswordButton"
                  PasswordChar="*"
@@ -40,15 +42,21 @@
                     VerticalAlignment="Bottom"
                     Orientation="Horizontal"
                     Spacing="10">
-            <Button Content="Connect"
-                    Command="{Binding ConnectServerCommand}"
+            <Button Content="Save"
+                    FontFamily="Arial"
+                    Command="{Binding AddServerCommand}"
                     CommandParameter="{Binding $parent[Window]}"
-                    Margin="0 20 0 0"/>
+                    Margin="0 20 0 0"
+                    Width="100"
+                    HorizontalContentAlignment="Center"/>
             
             <Button Content="Cancel"
+                    FontFamily="Arial"
                     Command="{Binding CloseWindowCommand}"
                     CommandParameter="{Binding $parent[Window]}"
-                    Margin="0 20 0 0"/>
+                    Margin="0 20 0 0"
+                    Width="100"
+                    HorizontalContentAlignment="Center"/>
         </StackPanel>
         
     </StackPanel>

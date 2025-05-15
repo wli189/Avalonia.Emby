@@ -8,6 +8,7 @@
         <entry key="Avalonia.Emby/Views/AddServerWindow.axaml" value="Avalonia.Emby/Avalonia.Emby.csproj" />
         <entry key="Avalonia.Emby/Views/MainWindow.axaml" value="Avalonia.Emby/Avalonia.Emby.csproj" />
         <entry key="Avalonia.Emby/Views/ServerInput.axaml" value="Avalonia.Emby/Avalonia.Emby.csproj" />
+        <entry key="Avalonia.Emby/Views/ServerItem.axaml" value="Avalonia.Emby/Avalonia.Emby.csproj" />
         <entry key="Avalonia.Emby/Views/ServerList.axaml" value="Avalonia.Emby/Avalonia.Emby.csproj" />
       </map>
     </option>

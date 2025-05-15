@@ -12,7 +12,9 @@
         TransparencyLevelHint="AcrylicBlur"
         Background="Transparent"
         ExtendClientAreaToDecorationsHint="True"
-        WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="CenterScreen"
+        MinWidth="1270"
+        MinHeight="800">
 
     <Design.DataContext>
         <!-- This only sets the DataContext for the previewer in an IDE,
@@ -25,11 +27,17 @@
             <ExperimentalAcrylicBorder.Material>
                 <ExperimentalAcrylicMaterial
                     BackgroundSource="Digger"
-                    TintColor="Black"
+                    TintColor="{DynamicResource SystemAltHighColor}"
                     TintOpacity="1"
                     MaterialOpacity="0.65" />
             </ExperimentalAcrylicBorder.Material>
         </ExperimentalAcrylicBorder>
+        
+        <Label Content="Avalonia.Emby"
+               HorizontalAlignment="Center"
+               VerticalAlignment="Top"
+               Margin="0, 2, 0, 0"
+               FontFamily="Arial"/>
         
         <Panel Margin="40">
             <Label Content="Server List" 
@@ -37,9 +45,25 @@
                    FontFamily="Arial"
                    FontWeight="SemiBold"/>
             
-            <Panel Margin="40">
-                <views:ServerList/>
-            </Panel>
+            <ScrollViewer Margin="0 40 0 40"
+                          MaxWidth="1050">
+                <ItemsControl ItemsSource="{Binding ServerList}" 
+                              x:DataType="vm:MainWindowViewModel"
+                              HorizontalAlignment="Center">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                                <views:ServerItem/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                    <ItemsControl.Styles>
+                        <Style Selector="ItemsControl">
+                            <Setter Property="Background" Value="{DynamicResource SystemChromeMediumColor}"/>
+                            <Setter Property="Padding" Value="8"/>
+                            <Setter Property="CornerRadius" Value="8"/>
+                        </Style>
+                    </ItemsControl.Styles>
+                </ItemsControl>
+            </ScrollViewer>
             
             <Button HorizontalAlignment="Right" 
                     VerticalAlignment="Bottom"

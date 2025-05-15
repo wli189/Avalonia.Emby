@@ -1,17 +1,21 @@
-﻿namespace Avalonia.Emby.ViewModels;
+﻿using Avalonia.Emby.Models;
+
+namespace Avalonia.Emby.ViewModels;
 
 public class ServerViewModel : ViewModelBase
 {
-    public string Name { get; set; }
-    public string Url { get; set; }
-    public string Username { get; set; }
-    public string AccessToken { get; set; }
+    private readonly Server _server;
 
-    public ServerViewModel(string name, string url, string username, string accessToken)
+    public ServerViewModel(Server server)
     {
-        Name = name;
-        Url = url;
-        Username = username;
-        AccessToken = accessToken;
+        _server = server;
     }
+
+    public Server Server => _server;
+    public string ServerName => _server.ServerName;
+    public string ServerUrl => _server.ServerUrl;
+    public string Username => _server.Username;
+    public string Password => _server.Password;
+    public string AccessToken => _server.AccessToken;
+
 }

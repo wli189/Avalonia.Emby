@@ -11,6 +11,7 @@ using Avalonia.Platform;
 using ReactiveUI;
 using System.Text.Json.Serialization;
 using Avalonia.Animation;
+using Avalonia.Emby.Models;
 using Avalonia.Media;
 using Avalonia.Styling;
 using Emby.ApiClient.Model;
@@ -51,10 +52,7 @@ public class AddServerViewModel : ViewModelBase
     public string ServerName
     {
         get => _serverName;
-        set
-        {
-            this.RaiseAndSetIfChanged(ref _serverName, value);
-        }
+        set => this.RaiseAndSetIfChanged(ref _serverName, value);
     }
 
     public bool IsConnecting
@@ -63,23 +61,13 @@ public class AddServerViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _isConnecting, value);
     }
 
-    private ServerViewModel? _addServer;
-
-    public ObservableCollection<ServerViewModel> ServerList { get; } = new();
-
-    public ServerViewModel? AddServer
-    {
-        get => _addServer;
-        set => this.RaiseAndSetIfChanged(ref _addServer, value);
-    }
-
-    public ICommand ConnectServerCommand { get; }
+    public ICommand AddServerCommand { get; }
     public ICommand CloseWindowCommand { get; }
 
     public AddServerViewModel()
     {
 
-        ConnectServerCommand = ReactiveCommand.CreateFromTask<Window>(async (window) =>
+        AddServerCommand = ReactiveCommand.CreateFromTask<Window>(async (window) =>
         {
             try
             {
@@ -109,21 +97,16 @@ public class AddServerViewModel : ViewModelBase
                 var serverName = ServerName ?? serverInfo.ServerName ?? "Emby Server";
 
                 // Create server info
-                var server = new ServerViewModel(
+                var server = new Server(
                     serverName,
                     baseUrl,
                     Username,
+                    Password,
                     authResult.AccessToken
                 );
 
-                // Console.WriteLine($"Server: Name={server.Name}, URL={server.Url}, Username={server.Username}, AccessToken={server.AccessToken}");
-                // Console.WriteLine($"Connected to {server.Name}");
-                ServerList.Add(server); // Add to ServerList
-                AddServer = server;
-
-                // Close the dialog
                 IsConnecting = false;
-                window?.Close();
+                window?.Close(server);
             }
             catch (HttpRequestException ex)
             {
@@ -279,7 +262,7 @@ public class AddServerViewModel : ViewModelBase
                 Duration = TimeSpan.FromSeconds(0.2)
             }
         };
-        
+
         content.Opacity = 0;
         flyout.ShowAt(window);
         content.Opacity = 1;

@@ -1,0 +1,25 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:Avalonia.Emby.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="Avalonia.Emby.Views.ServerItem"
+             x:DataType="vm:ServerViewModel">
+    
+    <StackPanel>
+        <Button Width="1000"
+                Height="80">
+            <StackPanel Margin="10, 0 ,10, 0"
+                        VerticalAlignment="Center">
+                <TextBlock Text="{Binding ServerName}" 
+                           FontFamily="Arial"
+                           FontSize="14"
+                           Opacity="0.7"/>
+                <TextBlock Text="{Binding Username}" 
+                           FontFamily="Arial"
+                           FontSize="20"/>
+            </StackPanel>
+        </Button>
+    </StackPanel>
+</UserControl>
