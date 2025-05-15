@@ -8,7 +8,7 @@
         TransparencyLevelHint="AcrylicBlur"
         ExtendClientAreaToDecorationsHint="True"
         ExtendClientAreaChromeHints="NoChrome"
-        Width="550" Height="450"
+        Width="550" Height="500"
         CanResize="False"
         WindowStartupLocation="CenterScreen"
         xmlns:views="clr-namespace:Avalonia.Emby.Views">

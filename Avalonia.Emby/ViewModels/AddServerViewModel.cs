@@ -9,6 +9,7 @@ using Avalonia.Controls;
 using Avalonia.Platform;
 using ReactiveUI;
 using System.Text.Json.Serialization;
+using Emby.ApiClient.Model;
 
 namespace Avalonia.Emby.ViewModels;
 
@@ -17,6 +18,7 @@ public class AddServerViewModel : ViewModelBase
     private string _username;
     private string _password;
     private string _serverUrl;
+    private string _serverName;
     private const string ClientName = "Avalonia.Emby";
     private const string DeviceName = "Desktop";
     private const string Version = "1.0.0.0";
@@ -41,6 +43,15 @@ public class AddServerViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _password, value);
     }
 
+    public string ServerName
+    {
+        get => _serverName;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _serverName, value);
+        }
+    }
+
     private ServerViewModel? _addServer;
 
     public ObservableCollection<ServerViewModel> ServerList { get; } = new();
@@ -61,55 +72,19 @@ public class AddServerViewModel : ViewModelBase
         {
             try
             {
-
                 // Validate inputs
-                if (string.IsNullOrWhiteSpace(ServerUrl) || string.IsNullOrWhiteSpace(Username) || string.IsNullOrWhiteSpace(Password))
+                if (string.IsNullOrWhiteSpace(ServerUrl) || string.IsNullOrWhiteSpace(Username))
                 {
                     return;
                 }
 
-                // Format server URL
-                var baseUrl = ServerUrl.Trim();
-                if (!baseUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
-                    !baseUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
-                {
-                    baseUrl = "https://" + baseUrl; // Default to HTTPS for security
-                }
-                baseUrl = baseUrl.TrimEnd('/');
+                var baseUrl = formatUrl(ServerUrl);
 
-                // Authenticate
-                var authData = new
-                {
-                    Username = Username,
-                    Pw = Password
-                };
+                var authResult = await getAuth(baseUrl);
 
-                var authContent = new StringContent(
-                    JsonSerializer.Serialize(authData),
-                    Encoding.UTF8,
-                    "application/json");
+                var serverInfo = await getServerInfo(baseUrl, authResult.AccessToken);
 
-                var authRequest = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl}/Users/AuthenticateByName")
-                {
-                    Content = authContent
-                };
-
-                // Add the X-Emby-Authorization header with the correct format
-                authRequest.Headers.Add("X-Emby-Authorization",
-                    $"Emby UserId=\"\", Client=\"{ClientName}\", Device=\"{DeviceName}\", DeviceId=\"{_deviceId}\", Version=\"{Version}\"");
-
-                var authResponse = await _httpClient.SendAsync(authRequest);
-                authResponse.EnsureSuccessStatusCode();
-
-                var authJson = await authResponse.Content.ReadAsStringAsync();
-                Console.WriteLine($"Auth Response: {authJson}"); // Add debug logging
-
-                var authResult = JsonSerializer.Deserialize<AuthResponse>(authJson);
-                var serverName = authResult.User.ServerName;
-
-                // Debug prints for server name and access token
-                Console.WriteLine($"Server Name: {serverName}");
-                Console.WriteLine($"Access Token: {authResult.AccessToken}");
+                var serverName = ServerName ?? serverInfo.ServerName ?? "Emby Server";
 
                 // Create server info
                 var server = new ServerViewModel(
@@ -118,6 +93,8 @@ public class AddServerViewModel : ViewModelBase
                     Username,
                     authResult.AccessToken
                 );
+
+                Console.WriteLine($"Server: Name={server.Name}, URL={server.Url}, Username={server.Username}, AccessToken={server.AccessToken}");
 
                 Console.WriteLine($"Connected to {server.Name}");
                 ServerList.Add(server); // Add to ServerList
@@ -146,6 +123,84 @@ public class AddServerViewModel : ViewModelBase
         });
     }
 
+    private string formatUrl(string url)
+    {
+        // Format server URL
+        var baseUrl = ServerUrl.Trim();
+        if (!baseUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
+            !baseUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        {
+            baseUrl = "https://" + baseUrl; // Default to HTTPS for security
+        }
+        baseUrl = baseUrl.TrimEnd('/');
+
+        // Add default ports if not specified
+        var uri = new Uri(baseUrl);
+        if (!baseUrl.Contains(":", StringComparison.OrdinalIgnoreCase))
+        {
+            // No port specified, add default port
+            var port = uri.Scheme.ToLower() == "http" ? "80" : "443";
+            baseUrl = $"{baseUrl}:{port}";
+        }
+
+        return baseUrl;
+    }
+
+    private async Task<AuthResponse> getAuth(string baseUrl)
+    {
+        // Authenticate
+        var authData = new
+        {
+            Username = Username,
+            Pw = Password
+        };
+
+        var authContent = new StringContent(
+            JsonSerializer.Serialize(authData),
+            Encoding.UTF8,
+            "application/json");
+
+        var authRequest = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl}/Users/AuthenticateByName")
+        {
+            Content = authContent
+        };
+
+        // Add the X-Emby-Authorization header with the correct format
+        authRequest.Headers.Add("X-Emby-Authorization",
+            $"Emby UserId=\"\", Client=\"{ClientName}\", Device=\"{DeviceName}\", DeviceId=\"{_deviceId}\", Version=\"{Version}\"");
+
+        var authResponse = await _httpClient.SendAsync(authRequest);
+        authResponse.EnsureSuccessStatusCode();
+
+        var authJson = await authResponse.Content.ReadAsStringAsync();
+        // Console.WriteLine($"Auth Response: {authJson}"); // Add debug logging
+
+        var authResult = JsonSerializer.Deserialize<AuthResponse>(authJson);
+
+        return authResult!;
+    }
+
+    private async Task<ServerInfo> getServerInfo(string baseUrl, string accessToken)
+    {
+
+        
+        var serverInfoRequest = new HttpRequestMessage(HttpMethod.Get, $"{baseUrl}/System/Info")
+        {
+            Headers =
+            {
+                { "X-Emby-Authorization", $"Emby UserId=\"\", Client=\"{ClientName}\", Device=\"{DeviceName}\", DeviceId=\"{_deviceId}\", Version=\"{Version}\", Token=\"{accessToken}\"" }
+            }
+        };
+
+        var serverInfoResponse = await _httpClient.SendAsync(serverInfoRequest);
+        serverInfoResponse.EnsureSuccessStatusCode();
+
+        var serverInfoJson = await serverInfoResponse.Content.ReadAsStringAsync();
+        var serverInfo = JsonSerializer.Deserialize<ServerInfo>(serverInfoJson);
+        return serverInfo!;
+    }
+
+
     private class AuthResponse
     {
         [JsonPropertyName("AccessToken")]
@@ -158,6 +213,12 @@ public class AddServerViewModel : ViewModelBase
         public UserInfo User { get; set; } = new();
     }
 
+    private class ServerInfo
+    {
+        [JsonPropertyName("ServerName")]
+        public string ServerName { get; set; } = string.Empty;
+    }
+
     private class UserInfo
     {
         [JsonPropertyName("Id")]
@@ -165,8 +226,5 @@ public class AddServerViewModel : ViewModelBase
 
         [JsonPropertyName("Name")]
         public string Name { get; set; } = string.Empty;
-        
-        [JsonPropertyName("ServerName")]
-        public string ServerName { get; set; } = "Emby Server";
     }
 }
