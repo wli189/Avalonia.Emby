@@ -88,9 +88,11 @@ public class AddServerViewModel : ViewModelBase
                     return;
                 }
 
-                var baseUrl = formatUrl(ServerUrl);
+                var baseUrl = formatUrl();
 
                 var authResult = await getAuth(baseUrl);
+
+                var UserId = authResult.SessionInfo.UserId;
 
                 var serverInfo = await getServerInfo(baseUrl, authResult.AccessToken);
 
@@ -100,6 +102,7 @@ public class AddServerViewModel : ViewModelBase
                 var server = new Server(
                     serverName,
                     baseUrl,
+                    UserId,
                     Username,
                     Password,
                     authResult.AccessToken
@@ -134,7 +137,7 @@ public class AddServerViewModel : ViewModelBase
         });
     }
 
-    private string formatUrl(string url)
+    private string formatUrl()
     {
         // Format server URL
         var baseUrl = ServerUrl.Trim();
@@ -143,15 +146,14 @@ public class AddServerViewModel : ViewModelBase
         {
             baseUrl = "https://" + baseUrl; // Default to HTTPS for security
         }
-        baseUrl = baseUrl.TrimEnd('/');
 
-        // Add default ports if not specified
+        // Parse the URL and check if port is specified
         var uri = new Uri(baseUrl);
-        if (!baseUrl.Contains(":", StringComparison.OrdinalIgnoreCase))
+        if (uri.IsDefaultPort)
         {
-            // No port specified, add default port
+            // No port specified or using default port, add explicit port
             var port = uri.Scheme.ToLower() == "http" ? "80" : "443";
-            baseUrl = $"{baseUrl}:{port}";
+            baseUrl = $"{uri.Scheme}://{uri.Host}:{port}";
         }
 
         return baseUrl;
@@ -184,7 +186,7 @@ public class AddServerViewModel : ViewModelBase
         authResponse.EnsureSuccessStatusCode();
 
         var authJson = await authResponse.Content.ReadAsStringAsync();
-
+        
         var authResult = JsonSerializer.Deserialize<AuthResponse>(authJson);
 
         return authResult!;
@@ -220,7 +222,16 @@ public class AddServerViewModel : ViewModelBase
         public string ServerId { get; set; } = string.Empty;
 
         [JsonPropertyName("User")]
-        public UserInfo User { get; set; } = new();
+        public UserInfo User { get; set; } = null!;
+
+        [JsonPropertyName("SessionInfo")]
+        public SessionInfo SessionInfo { get; set; } = null!;
+    }
+
+    private class SessionInfo
+    {
+        [JsonPropertyName("UserId")]
+        public string UserId { get; set; } = string.Empty;
     }
 
     private class ServerInfo

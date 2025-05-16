@@ -55,13 +55,6 @@
                                 <views:ServerItem/>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
-                    <ItemsControl.Styles>
-                        <Style Selector="ItemsControl">
-                            <Setter Property="Background" Value="{DynamicResource SystemChromeMediumColor}"/>
-                            <Setter Property="Padding" Value="8"/>
-                            <Setter Property="CornerRadius" Value="8"/>
-                        </Style>
-                    </ItemsControl.Styles>
                 </ItemsControl>
             </ScrollViewer>
             
