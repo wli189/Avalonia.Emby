@@ -30,6 +30,7 @@ public class MainWindowViewModel : ViewModelBase
             if (result != null)
             {
                 var serverVm = new AccountViewModel(result);
+                serverVm.AccountDeleted += OnAccountDeleted;
                 ServerList.Add(serverVm);
                 await SaveServers();
             }
@@ -39,12 +40,24 @@ public class MainWindowViewModel : ViewModelBase
         _ = LoadServers();
     }
 
+    private async void OnAccountDeleted(object? sender, Account account)
+    {
+        if (sender is AccountViewModel accountVm)
+        {
+            accountVm.AccountDeleted -= OnAccountDeleted;
+            ServerList.Remove(accountVm);
+            await SaveServers();
+        }
+    }
+
     private async Task LoadServers()
     {
         var servers = await _storageService.LoadServersAsync();
         foreach (var server in servers)
         {
-            ServerList.Add(new AccountViewModel(server));
+            var serverVm = new AccountViewModel(server);
+            serverVm.AccountDeleted += OnAccountDeleted;
+            ServerList.Add(serverVm);
         }
     }
 

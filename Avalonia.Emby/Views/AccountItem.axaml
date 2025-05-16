@@ -8,31 +8,42 @@
              x:DataType="vm:AccountViewModel">
     
     <StackPanel>
-        <Button Width="1000"
-                Height="80"
-                Command="{Binding ConnectServerCommand}"
-                CommandParameter="{Binding $parent[Window]}">
-            <StackPanel Margin="10, 0 ,10, 0"
-                       VerticalAlignment="Center">
-                <TextBlock Text="{Binding ServerName}" 
-                         FontFamily="Arial"
-                         FontSize="14"
-                         Opacity="0.7"/>
-                <TextBlock Text="{Binding Username}" 
-                         FontFamily="Arial"
-                         FontSize="20"/>
-                <ProgressBar IsIndeterminate="True"
-                             Width="200"
-                             Height="2"
-                             VerticalAlignment="Center"
-                             IsVisible="{Binding IsConnecting}">
-                    <ProgressBar.Transitions>
-                        <Transitions>
-                            <DoubleTransition Property="Opacity" Duration="0:0:0.2"/>
-                        </Transitions>
-                    </ProgressBar.Transitions>
-                </ProgressBar>
-            </StackPanel>
-        </Button>
+        <Grid Width="1000" Height="80">
+            <Button Command="{Binding ConnectServerCommand}"
+                    CommandParameter="{Binding $parent[Window]}"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch">
+                <StackPanel Margin="10, 0 ,10, 0"
+                           VerticalAlignment="Center">
+                    <TextBlock Text="{Binding ServerName}" 
+                             FontFamily="Arial"
+                             FontSize="14"
+                             Opacity="0.6"/>
+                    <TextBlock Text="{Binding Username}" 
+                             FontFamily="Arial"
+                             FontSize="20"/>
+                    <ProgressBar IsIndeterminate="True"
+                                Width="200"
+                                Height="2"
+                                VerticalAlignment="Center"
+                                IsVisible="{Binding IsConnecting}">
+                        <ProgressBar.Transitions>
+                            <Transitions>
+                                <DoubleTransition Property="Opacity" Duration="0:0:0.2"/>
+                            </Transitions>
+                        </ProgressBar.Transitions>
+                    </ProgressBar>
+                </StackPanel>
+            </Button>
+            
+            <Button Command="{Binding DeleteAccountCommand}"
+                    CommandParameter="{Binding $parent[Window]}"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Center"
+                    Margin="0,0,10,0"
+                    Classes="danger">
+                <PathIcon Data="{StaticResource delete_regular}"/>
+            </Button>
+        </Grid>
     </StackPanel>
 </UserControl>

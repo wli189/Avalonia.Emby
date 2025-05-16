@@ -16,12 +16,14 @@ public class AccountViewModel : ViewModelBase
     private readonly HttpClient _httpClient = new HttpClient() { Timeout = TimeSpan.FromSeconds(5) };
     private bool _isConnecting;
     private readonly string _deviceId = Guid.NewGuid().ToString();
+    public event EventHandler<Account>? AccountDeleted;
 
     public AccountViewModel(Account account)
     {
         _account = account;
         _httpClient = new HttpClient();
         ConnectServerCommand = ReactiveCommand.CreateFromTask<Window>(ConnectToServerAsync);
+        DeleteAccountCommand = ReactiveCommand.Create<Window>(DeleteAccount);
     }
 
     public bool IsConnecting
@@ -31,6 +33,7 @@ public class AccountViewModel : ViewModelBase
     }
 
     public ICommand ConnectServerCommand { get; }
+    public ICommand DeleteAccountCommand { get; }
 
     public Account Account => _account;
     public string ServerName => _account.ServerName;
@@ -39,6 +42,11 @@ public class AccountViewModel : ViewModelBase
     public string Username => _account.Username;
     public string Password => _account.Password;
     public string AccessToken => _account.AccessToken;
+
+    private void DeleteAccount(Window window)
+    {
+        AccountDeleted?.Invoke(this, _account);
+    }
 
     private async Task ConnectToServerAsync(Window window)
     {
