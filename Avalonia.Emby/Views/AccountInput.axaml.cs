@@ -4,9 +4,9 @@ using Avalonia.Markup.Xaml;
 
 namespace Avalonia.Emby.Views;
 
-public partial class ServerItem : UserControl
+public partial class AccountInput : UserControl
 {
-    public ServerItem()
+    public AccountInput()
     {
         InitializeComponent();
     }

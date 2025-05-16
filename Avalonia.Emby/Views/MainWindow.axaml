@@ -52,7 +52,7 @@
                               HorizontalAlignment="Center">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                                <views:ServerItem/>
+                                <views:AccountItem/>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>

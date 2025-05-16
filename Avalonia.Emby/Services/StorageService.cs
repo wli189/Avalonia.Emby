@@ -24,7 +24,7 @@ public class StorageService
         _storageFile = Path.Combine(appDataPath, "servers.json");
     }
 
-    public async Task SaveServersAsync(IEnumerable<Server> servers)
+    public async Task SaveServersAsync(IEnumerable<Account> servers)
     {
         var json = JsonSerializer.Serialize(servers, new JsonSerializerOptions
         {
@@ -33,14 +33,14 @@ public class StorageService
         await File.WriteAllTextAsync(_storageFile, json);
     }
 
-    public async Task<List<Server>> LoadServersAsync()
+    public async Task<List<Account>> LoadServersAsync()
     {
         if (!File.Exists(_storageFile))
         {
-            return new List<Server>();
+            return new List<Account>();
         }
 
         var json = await File.ReadAllTextAsync(_storageFile);
-        return JsonSerializer.Deserialize<List<Server>>(json) ?? new List<Server>();
+        return JsonSerializer.Deserialize<List<Account>>(json) ?? new List<Account>();
     }
 }

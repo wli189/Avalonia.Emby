@@ -14,12 +14,12 @@ public partial class MainWindow : ReactiveWindow<MainWindowViewModel>
             action(ViewModel!.ShowDialog.RegisterHandler(DoShowDialogAsync)));
     }
 
-    private async Task DoShowDialogAsync(IInteractionContext<AddServerViewModel, Server?> interaction)
+    private async Task DoShowDialogAsync(IInteractionContext<AddAccountViewModel, Account?> interaction)
     {
-        var dialog = new AddServerWindow();
+        var dialog = new AddAccountWindow();
         dialog.DataContext = interaction.Input;
 
-        var result = await dialog.ShowDialog<Server?>(this);
+        var result = await dialog.ShowDialog<Account?>(this);
         interaction.SetOutput(result);
     }
 }

@@ -1,6 +1,6 @@
 ﻿namespace Avalonia.Emby.Models;
 
-public class Server
+public class Account
 {
     public string ServerName { get; set; }
     public string ServerUrl { get; set; }
@@ -9,7 +9,7 @@ public class Server
     public string Password { get; set; }
     public string AccessToken { get; set; }
 
-    public Server(string serverName, string serverUrl, string userId, string username, string password, string accessToken)
+    public Account(string serverName, string serverUrl, string userId, string username, string password, string accessToken)
     {
         ServerName = serverName;
         ServerUrl = serverUrl;

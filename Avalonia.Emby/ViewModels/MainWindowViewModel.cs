@@ -14,22 +14,22 @@ public class MainWindowViewModel : ViewModelBase
 {
     private readonly StorageService _storageService;
     public ICommand AddServerCommand { get; }
-    public ObservableCollection<ServerViewModel> ServerList { get; } = new();
-    public Interaction<AddServerViewModel, Server?> ShowDialog { get; }
+    public ObservableCollection<AccountViewModel> ServerList { get; } = new();
+    public Interaction<AddAccountViewModel, Account?> ShowDialog { get; }
 
     public MainWindowViewModel()
     {
         _storageService = new StorageService();
-        ShowDialog = new Interaction<AddServerViewModel, Server?>();
+        ShowDialog = new Interaction<AddAccountViewModel, Account?>();
 
         AddServerCommand = ReactiveCommand.CreateFromTask(async () =>
         {
-            var viewModel = new AddServerViewModel();
+            var viewModel = new AddAccountViewModel();
             var result = await ShowDialog.Handle(viewModel);
 
             if (result != null)
             {
-                var serverVm = new ServerViewModel(result);
+                var serverVm = new AccountViewModel(result);
                 ServerList.Add(serverVm);
                 await SaveServers();
             }
@@ -44,13 +44,13 @@ public class MainWindowViewModel : ViewModelBase
         var servers = await _storageService.LoadServersAsync();
         foreach (var server in servers)
         {
-            ServerList.Add(new ServerViewModel(server));
+            ServerList.Add(new AccountViewModel(server));
         }
     }
 
     private async Task SaveServers()
     {
-        var servers = ServerList.Select(vm => vm.Server).ToList();
+        var servers = ServerList.Select(vm => vm.Account).ToList();
         await _storageService.SaveServersAsync(servers);
     }
 }

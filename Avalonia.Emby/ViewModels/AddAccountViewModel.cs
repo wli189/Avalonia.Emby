@@ -18,16 +18,16 @@ using Emby.ApiClient.Model;
 
 namespace Avalonia.Emby.ViewModels;
 
-public class AddServerViewModel : ViewModelBase
+public class AddAccountViewModel : ViewModelBase
 {
     private string _username;
     private string _password;
     private string _serverUrl;
     private string _serverName;
     private bool _isConnecting;
-    private const string ClientName = "Avalonia.Emby";
-    private const string DeviceName = "Desktop";
-    private const string Version = "1.0.0.0";
+    public const string ClientName = "Avalonia.Emby";
+    public const string DeviceName = "Desktop";
+    public const string Version = "1.0.0.0";
     private readonly string _deviceId = Guid.NewGuid().ToString();
     private readonly HttpClient _httpClient = new HttpClient() { Timeout = TimeSpan.FromSeconds(5) };
 
@@ -61,13 +61,13 @@ public class AddServerViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _isConnecting, value);
     }
 
-    public ICommand AddServerCommand { get; }
+    public ICommand AddAccountCommand { get; }
     public ICommand CloseWindowCommand { get; }
 
-    public AddServerViewModel()
+    public AddAccountViewModel()
     {
 
-        AddServerCommand = ReactiveCommand.CreateFromTask<Window>(async (window) =>
+        AddAccountCommand = ReactiveCommand.CreateFromTask<Window>(async (window) =>
         {
             try
             {
@@ -99,7 +99,7 @@ public class AddServerViewModel : ViewModelBase
                 var serverName = ServerName ?? serverInfo.ServerName ?? "Emby Server";
 
                 // Create server info
-                var server = new Server(
+                var account = new Account(
                     serverName,
                     baseUrl,
                     UserId,
@@ -109,7 +109,7 @@ public class AddServerViewModel : ViewModelBase
                 );
 
                 IsConnecting = false;
-                window?.Close(server);
+                window?.Close(account);
             }
             catch (HttpRequestException ex)
             {

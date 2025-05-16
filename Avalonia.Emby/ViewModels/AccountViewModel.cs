@@ -10,15 +10,16 @@ using Avalonia.Media;
 
 namespace Avalonia.Emby.ViewModels;
 
-public class ServerViewModel : ViewModelBase
+public class AccountViewModel : ViewModelBase
 {
-    private readonly Server _server;
+    private readonly Account _account;
     private readonly HttpClient _httpClient = new HttpClient() { Timeout = TimeSpan.FromSeconds(5) };
     private bool _isConnecting;
+    private readonly string _deviceId = Guid.NewGuid().ToString();
 
-    public ServerViewModel(Server server)
+    public AccountViewModel(Account account)
     {
-        _server = server;
+        _account = account;
         _httpClient = new HttpClient();
         ConnectServerCommand = ReactiveCommand.CreateFromTask<Window>(ConnectToServerAsync);
     }
@@ -31,13 +32,13 @@ public class ServerViewModel : ViewModelBase
 
     public ICommand ConnectServerCommand { get; }
 
-    public Server Server => _server;
-    public string ServerName => _server.ServerName;
-    public string ServerUrl => _server.ServerUrl;
-    public string UserId => _server.UserId;
-    public string Username => _server.Username;
-    public string Password => _server.Password;
-    public string AccessToken => _server.AccessToken;
+    public Account Account => _account;
+    public string ServerName => _account.ServerName;
+    public string ServerUrl => _account.ServerUrl;
+    public string UserId => _account.UserId;
+    public string Username => _account.Username;
+    public string Password => _account.Password;
+    public string AccessToken => _account.AccessToken;
 
     private async Task ConnectToServerAsync(Window window)
     {
@@ -46,11 +47,19 @@ public class ServerViewModel : ViewModelBase
             IsConnecting = true;
 
             // Verify server is accessible
-            var response = await _httpClient.GetAsync($"{ServerUrl}/System/Info");
+            var request = new HttpRequestMessage(HttpMethod.Get, $"{ServerUrl}/System/Info");
+            request.Headers.Add("X-Emby-Authorization", $"Emby UserId=\"\", Client=\"{AddAccountViewModel.ClientName}\", Device=\"{AddAccountViewModel.DeviceName}\", DeviceId=\"{_deviceId}\", Version=\"{AddAccountViewModel.Version}\", Token=\"{AccessToken}\"");
+            var response = await _httpClient.SendAsync(request);
             response.EnsureSuccessStatusCode();
 
-            // TODO: Navigate to server content view
-            // This will be implemented when we add the server content view
+            // Navigate to library window
+            var libraryWindow = new Views.LibraryWindow
+            {
+                DataContext = new LibraryWindowViewModel(_account)
+            };
+            libraryWindow.Show();
+            window.Close();
+
 
             IsConnecting = false;
         }

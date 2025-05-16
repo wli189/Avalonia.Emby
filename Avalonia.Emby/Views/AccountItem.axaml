@@ -4,8 +4,8 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:Avalonia.Emby.ViewModels"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="Avalonia.Emby.Views.ServerItem"
-             x:DataType="vm:ServerViewModel">
+             x:Class="Avalonia.Emby.Views.AccountItem"
+             x:DataType="vm:AccountViewModel">
     
     <StackPanel>
         <Button Width="1000"
