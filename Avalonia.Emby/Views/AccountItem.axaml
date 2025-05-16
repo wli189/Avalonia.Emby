@@ -36,14 +36,22 @@
                 </StackPanel>
             </Button>
             
-            <Button Command="{Binding DeleteAccountCommand}"
-                    CommandParameter="{Binding $parent[Window]}"
-                    HorizontalAlignment="Right"
-                    VerticalAlignment="Center"
-                    Margin="0,0,10,0"
-                    Classes="danger">
-                <PathIcon Data="{StaticResource delete_regular}"/>
-            </Button>
+            <StackPanel Orientation="Horizontal"
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Right">
+                <Button Command="{Binding EditAccountCommand}"
+                        CommandParameter="{Binding $parent[Window]}"
+                        Margin="0,0,10,0"
+                        Classes="danger">
+                    <PathIcon Data="{StaticResource edit_regular}"/>
+                </Button>
+                <Button Command="{Binding DeleteAccountCommand}"
+                        CommandParameter="{Binding $parent[Window]}"
+                        Margin="0,0,10,0"
+                        Classes="danger">
+                    <PathIcon Data="{StaticResource delete_regular}"/>
+                </Button>
+            </StackPanel>
         </Grid>
     </StackPanel>
 </UserControl>

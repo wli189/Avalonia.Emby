@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using Avalonia.Animation;
 using Avalonia.Controls;
 using Avalonia.Media;
+using System.Reactive;
+using System.Reactive.Linq;
 
 namespace Avalonia.Emby.ViewModels;
 
@@ -17,6 +19,7 @@ public class AccountViewModel : ViewModelBase
     private bool _isConnecting;
     private readonly string _deviceId = Guid.NewGuid().ToString();
     public event EventHandler<Account>? AccountDeleted;
+    public Interaction<AddAccountViewModel, Account?> ShowDialog { get; } = new();
 
     public AccountViewModel(Account account)
     {
@@ -24,6 +27,7 @@ public class AccountViewModel : ViewModelBase
         _httpClient = new HttpClient();
         ConnectServerCommand = ReactiveCommand.CreateFromTask<Window>(ConnectToServerAsync);
         DeleteAccountCommand = ReactiveCommand.Create<Window>(DeleteAccount);
+        EditAccountCommand = ReactiveCommand.CreateFromTask<Window>(async window => await EditAccount());
     }
 
     public bool IsConnecting
@@ -34,6 +38,7 @@ public class AccountViewModel : ViewModelBase
 
     public ICommand ConnectServerCommand { get; }
     public ICommand DeleteAccountCommand { get; }
+    public ICommand EditAccountCommand { get; }
 
     public Account Account => _account;
     public string ServerName => _account.ServerName;
@@ -46,6 +51,29 @@ public class AccountViewModel : ViewModelBase
     private void DeleteAccount(Window window)
     {
         AccountDeleted?.Invoke(this, _account);
+    }
+
+    private async Task EditAccount()
+    {
+        var viewModel = new AddAccountViewModel
+        {
+            ServerName = ServerName,
+            ServerUrl = ServerUrl,
+            Username = Username,
+            Password = Password
+        };
+        var result = await ShowDialog.Handle(viewModel);
+        if (result != null)
+        {
+            _account.ServerName = result.ServerName;
+            _account.ServerUrl = result.ServerUrl;
+            _account.Username = result.Username;
+            _account.Password = result.Password;
+            this.RaisePropertyChanged(nameof(ServerName));
+            this.RaisePropertyChanged(nameof(ServerUrl));
+            this.RaisePropertyChanged(nameof(Username));
+            this.RaisePropertyChanged(nameof(Password));
+        }
     }
 
     private async Task ConnectToServerAsync(Window window)
