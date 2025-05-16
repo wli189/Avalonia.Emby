@@ -30,6 +30,8 @@ public class AddAccountViewModel : ViewModelBase
     public const string Version = "1.0.0.0";
     private readonly string _deviceId = Guid.NewGuid().ToString();
     private readonly HttpClient _httpClient = new HttpClient() { Timeout = TimeSpan.FromSeconds(5) };
+    public ICommand AddAccountCommand { get; }
+    public ICommand CloseWindowCommand { get; }
 
     public string ServerUrl
     {
@@ -60,10 +62,7 @@ public class AddAccountViewModel : ViewModelBase
         get => _isConnecting;
         set => this.RaiseAndSetIfChanged(ref _isConnecting, value);
     }
-
-    public ICommand AddAccountCommand { get; }
-    public ICommand CloseWindowCommand { get; }
-
+    
     public AddAccountViewModel()
     {
 

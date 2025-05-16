@@ -15,12 +15,22 @@ namespace Avalonia.Emby.ViewModels;
 public class AccountViewModel : ViewModelBase
 {
     private readonly Account _account;
+    public Account Account => _account;
+    public string ServerName => _account.ServerName;
+    public string ServerUrl => _account.ServerUrl;
+    public string UserId => _account.UserId;
+    public string Username => _account.Username;
+    public string Password => _account.Password;
+    public string AccessToken => _account.AccessToken;
     private readonly HttpClient _httpClient = new HttpClient() { Timeout = TimeSpan.FromSeconds(5) };
     private bool _isConnecting;
     private readonly string _deviceId = Guid.NewGuid().ToString();
     public event EventHandler<Account>? AccountDeleted;
     public Interaction<AddAccountViewModel, Account?> ShowDialog { get; } = new();
-
+    public ICommand ConnectServerCommand { get; }
+    public ICommand DeleteAccountCommand { get; }
+    public ICommand EditAccountCommand { get; }
+    
     public AccountViewModel(Account account)
     {
         _account = account;
@@ -35,18 +45,6 @@ public class AccountViewModel : ViewModelBase
         get => _isConnecting;
         set => this.RaiseAndSetIfChanged(ref _isConnecting, value);
     }
-
-    public ICommand ConnectServerCommand { get; }
-    public ICommand DeleteAccountCommand { get; }
-    public ICommand EditAccountCommand { get; }
-
-    public Account Account => _account;
-    public string ServerName => _account.ServerName;
-    public string ServerUrl => _account.ServerUrl;
-    public string UserId => _account.UserId;
-    public string Username => _account.Username;
-    public string Password => _account.Password;
-    public string AccessToken => _account.AccessToken;
 
     private void DeleteAccount(Window window)
     {
