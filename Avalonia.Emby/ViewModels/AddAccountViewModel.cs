@@ -73,20 +73,8 @@ public class AddAccountViewModel : ViewModelBase
             {
                 IsConnecting = true;
 
-                // Validate inputs
-                if (string.IsNullOrWhiteSpace(ServerUrl))
-                {
-                    await flyoutBox("Please enter a server URL", window);
-                    IsConnecting = false;
-                    return;
-                }
-
-                if (string.IsNullOrWhiteSpace(Username))
-                {
-                    await flyoutBox("Please enter a username", window);
-                    IsConnecting = false;
-                    return;
-                }
+                if (!await checkUrlValid(window)) return;
+                if (!await checkUsernameValid(window)) return;
 
                 var baseUrl = formatUrl();
 
@@ -98,7 +86,7 @@ public class AddAccountViewModel : ViewModelBase
 
                 var serverName = ServerName ?? serverInfo.ServerName ?? "Emby Server";
 
-                // Create server info
+                // Create account info
                 var account = new Account(
                     serverName,
                     baseUrl,
@@ -135,6 +123,28 @@ public class AddAccountViewModel : ViewModelBase
         {
             window?.Close();
         });
+    }
+
+    private async Task<bool> checkUsernameValid(Window window)
+    {
+        if (string.IsNullOrWhiteSpace(Username))
+        {
+            await flyoutBox("Please enter a username", window);
+            IsConnecting = false;
+            return false;
+        }
+        return true;
+    }
+
+    private async Task<bool> checkUrlValid(Window window)
+    {
+        if (string.IsNullOrWhiteSpace(ServerUrl))
+        {
+            await flyoutBox("Please enter a server URL", window);
+            IsConnecting = false;
+            return false;
+        }
+        return true;
     }
 
     private string formatUrl()
