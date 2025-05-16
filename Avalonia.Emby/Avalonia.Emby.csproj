@@ -23,6 +23,7 @@
             <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
         </PackageReference>
         <PackageReference Include="Avalonia.ReactiveUI" Version="11.2.7"/>
-        <PackageReference Include="Emby.ApiClient" Version="1.1.54"/>
+        <PackageReference Include="Emby.ApiClient" Version="4.9.0.56-beta" />
+        <PackageReference Include="MediaBrowser.Common" Version="4.9.0.52-beta" />
     </ItemGroup>
 </Project>
