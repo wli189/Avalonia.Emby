@@ -34,7 +34,7 @@ public class AccountViewModel : ViewModelBase
     public AccountViewModel(Account account)
     {
         _account = account;
-        _httpClient = new HttpClient();
+        _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd($"{AddAccountViewModel.ClientName}/{AddAccountViewModel.Version}");
         ConnectServerCommand = ReactiveCommand.CreateFromTask<Window>(ConnectToServerAsync);
         DeleteAccountCommand = ReactiveCommand.Create<Window>(DeleteAccount);
         EditAccountCommand = ReactiveCommand.CreateFromTask<Window>(async window => await EditAccount());

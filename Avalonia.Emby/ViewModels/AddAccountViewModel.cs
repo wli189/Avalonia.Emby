@@ -25,9 +25,9 @@ public class AddAccountViewModel : ViewModelBase
     private string _serverUrl;
     private string _serverName;
     private bool _isConnecting;
-    public const string ClientName = "Avalonia.Emby";
+    public const string ClientName = "Tsukimi";
     public const string DeviceName = "Desktop";
-    public const string Version = "1.0.0.0";
+    public const string Version = "0.21.0";
     private readonly string _deviceId = Guid.NewGuid().ToString();
     private readonly HttpClient _httpClient = new HttpClient() { Timeout = TimeSpan.FromSeconds(5) };
     public ICommand AddAccountCommand { get; }
@@ -65,6 +65,7 @@ public class AddAccountViewModel : ViewModelBase
     
     public AddAccountViewModel()
     {
+        _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd($"{ClientName}/{Version}");
 
         AddAccountCommand = ReactiveCommand.CreateFromTask<Window>(async (window) =>
         {
