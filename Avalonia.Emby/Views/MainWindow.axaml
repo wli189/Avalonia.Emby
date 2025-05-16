@@ -13,7 +13,7 @@
         Background="Transparent"
         ExtendClientAreaToDecorationsHint="True"
         WindowStartupLocation="CenterScreen"
-        MinWidth="1270"
+        MinWidth="1200"
         MinHeight="800">
 
     <Design.DataContext>
@@ -36,27 +36,35 @@
         <Label Content="Avalonia.Emby"
                HorizontalAlignment="Center"
                VerticalAlignment="Top"
-               Margin="0, 2, 0, 0"
+               Margin="0, 5, 0, 0"
                FontFamily="Arial"/>
         
         <Panel Margin="40">
             <Label Content="Server List" 
                    FontSize="24"
                    FontFamily="Arial"
-                   FontWeight="SemiBold"/>
+                   FontWeight="SemiBold"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Top"/>
             
-            <ScrollViewer Margin="0 40 0 40"
-                          MaxWidth="1050">
-                <ItemsControl ItemsSource="{Binding ServerList}" 
-                              x:DataType="vm:MainWindowViewModel"
-                              HorizontalAlignment="Center">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                                <views:AccountItem/>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </ScrollViewer>
+            <ListBox ItemsSource="{Binding ServerList}" 
+                     x:DataType="vm:MainWindowViewModel"
+                     HorizontalAlignment="Center"
+                     VerticalAlignment="Top"
+                     Margin="40"
+                     CornerRadius="15"
+                     Background="Transparent">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <views:AccountItem/>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+                <ListBox.Styles>
+                    <Style Selector="ListBoxItem">
+                        <Setter Property="Padding" Value="0"/>
+                    </Style>
+                </ListBox.Styles>
+            </ListBox>
             
             <Button HorizontalAlignment="Right" 
                     VerticalAlignment="Bottom"

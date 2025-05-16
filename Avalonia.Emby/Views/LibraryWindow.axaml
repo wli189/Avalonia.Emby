@@ -28,15 +28,17 @@
         <Label Content="Avalonia.Emby"
                HorizontalAlignment="Center"
                VerticalAlignment="Top"
-               Margin="0, 2, 0, 0"
+               Margin="0, 5, 0, 0"
                FontFamily="Arial"/>
         
         <Button HorizontalAlignment="Left" 
                 VerticalAlignment="Top"
+                Margin="2 2 0 0"
                 Background="Transparent"
                 Command="{Binding BackCommand}"
-                CommandParameter="{Binding $parent[Window]}">
-            <PathIcon Data="{StaticResource list_regular}"></PathIcon>
+                CommandParameter="{Binding $parent[Window]}"
+                IsCancel="True">
+            <PathIcon Data="{StaticResource window_new_regular}" RenderTransform="rotate(225deg)"></PathIcon>
         </Button>
     </Panel>
 </Window>
