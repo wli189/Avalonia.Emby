@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Avalonia.Emby", "Avalonia.Emby\Avalonia.Emby.csproj", "{C665AA76-6C30-4510-958E-B433ECB92E7A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EmbyClient.Dotnet", "Net.RestSharp\EmbyClient.Dotnet\EmbyClient.Dotnet.csproj", "{A80BD8B9-D572-489E-A5E2-E1BD2D7E06AB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{C665AA76-6C30-4510-958E-B433ECB92E7A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C665AA76-6C30-4510-958E-B433ECB92E7A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C665AA76-6C30-4510-958E-B433ECB92E7A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A80BD8B9-D572-489E-A5E2-E1BD2D7E06AB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A80BD8B9-D572-489E-A5E2-E1BD2D7E06AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A80BD8B9-D572-489E-A5E2-E1BD2D7E06AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A80BD8B9-D572-489E-A5E2-E1BD2D7E06AB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

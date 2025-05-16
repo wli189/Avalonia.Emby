@@ -9,6 +9,8 @@ using Avalonia.Controls;
 using Avalonia.Media;
 using System.Reactive;
 using System.Reactive.Linq;
+using EmbyClient.Dotnet.Api;
+using EmbyClient.Dotnet.Client;
 
 namespace Avalonia.Emby.ViewModels;
 
@@ -22,19 +24,16 @@ public class AccountViewModel : ViewModelBase
     public string Username => _account.Username;
     public string Password => _account.Password;
     public string AccessToken => _account.AccessToken;
-    private readonly HttpClient _httpClient = new HttpClient() { Timeout = TimeSpan.FromSeconds(5) };
     private bool _isConnecting;
-    private readonly string _deviceId = Guid.NewGuid().ToString();
     public event EventHandler<Account>? AccountDeleted;
     public Interaction<AddAccountViewModel, Account?> ShowDialog { get; } = new();
     public ICommand ConnectServerCommand { get; }
     public ICommand DeleteAccountCommand { get; }
     public ICommand EditAccountCommand { get; }
-    
+
     public AccountViewModel(Account account)
     {
         _account = account;
-        _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd($"{AddAccountViewModel.ClientName}/{AddAccountViewModel.Version}");
         ConnectServerCommand = ReactiveCommand.CreateFromTask<Window>(ConnectToServerAsync);
         DeleteAccountCommand = ReactiveCommand.Create<Window>(DeleteAccount);
         EditAccountCommand = ReactiveCommand.CreateFromTask<Window>(async window => await EditAccount());
@@ -80,12 +79,22 @@ public class AccountViewModel : ViewModelBase
         {
             IsConnecting = true;
 
-            // Verify server is accessible
-            var request = new HttpRequestMessage(HttpMethod.Get, $"{ServerUrl}/System/Info");
-            request.Headers.Add("X-Emby-Authorization", $"Emby UserId=\"\", Client=\"{AddAccountViewModel.ClientName}\", Device=\"{AddAccountViewModel.DeviceName}\", DeviceId=\"{_deviceId}\", Version=\"{AddAccountViewModel.Version}\", Token=\"{AccessToken}\"");
-            var response = await _httpClient.SendAsync(request);
-            response.EnsureSuccessStatusCode();
+            // Setup API configuration
+            var config = new Configuration
+            {
+                BasePath = ServerUrl,
+                UserAgent = $"{AddAccountViewModel.ClientName}/{AddAccountViewModel.Version}",
+                Timeout = 5000
+            };
 
+            // Add auth header
+            var authHeader = $"Emby UserId=\"{UserId}\", Client=\"{AddAccountViewModel.ClientName}\", Device=\"{Environment.MachineName}\", DeviceId=\"{AddAccountViewModel.DeviceId}\", Version=\"{AddAccountViewModel.Version}\", Token=\"{AccessToken}\"";
+            config.DefaultHeader.Add("X-Emby-Authorization", authHeader);
+
+            // Try to connect and get server info
+            var systemService = new SystemServiceApi(config);
+            await systemService.GetSystemInfoAsync();
+            
             // Navigate to library window
             var libraryWindow = new Views.LibraryWindow
             {
@@ -94,25 +103,16 @@ public class AccountViewModel : ViewModelBase
             libraryWindow.Show();
             window.Close();
 
-
-            IsConnecting = false;
-        }
-        catch (HttpRequestException ex)
-        {
-            var message = ex.StatusCode != null
-                ? $"Connection error: {(int)ex.StatusCode} - {ex.Message}"
-                : $"Connection error: {ex.Message}";
-            await flyoutBox(message, window);
-            IsConnecting = false;
-        }
-        catch (TaskCanceledException)
-        {
-            await flyoutBox("Connection timed out", window);
             IsConnecting = false;
         }
         catch (Exception ex)
         {
-            await flyoutBox($"Error: {ex.Message}", window);
+            var message = ex.Message;
+            if (message.StartsWith("Error calling PostUsersAuthenticatebyname:"))
+            {
+                message = message.Split(':', 2)[1].Trim();
+            }
+            await flyoutBox($"Error: {message}", window);
             IsConnecting = false;
         }
     }

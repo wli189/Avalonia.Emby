@@ -14,7 +14,9 @@ using Avalonia.Animation;
 using Avalonia.Emby.Models;
 using Avalonia.Media;
 using Avalonia.Styling;
-using Emby.ApiClient.Model;
+using EmbyClient.Dotnet.Api;
+using EmbyClient.Dotnet.Client;
+using EmbyClient.Dotnet.Model;
 
 namespace Avalonia.Emby.ViewModels;
 
@@ -26,10 +28,9 @@ public class AddAccountViewModel : ViewModelBase
     private string _serverName;
     private bool _isConnecting;
     public const string ClientName = "Tsukimi";
-    public const string DeviceName = "Desktop";
     public const string Version = "0.21.0";
-    private readonly string _deviceId = Guid.NewGuid().ToString();
-    private readonly HttpClient _httpClient = new HttpClient() { Timeout = TimeSpan.FromSeconds(5) };
+    public static string DeviceId = Guid.NewGuid().ToString();
+    private Configuration apiConfiguration;
     public ICommand AddAccountCommand { get; }
     public ICommand CloseWindowCommand { get; }
 
@@ -62,67 +63,60 @@ public class AddAccountViewModel : ViewModelBase
         get => _isConnecting;
         set => this.RaiseAndSetIfChanged(ref _isConnecting, value);
     }
-    
+
     public AddAccountViewModel()
     {
-        _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd($"{ClientName}/{Version}");
-
-        AddAccountCommand = ReactiveCommand.CreateFromTask<Window>(async (window) =>
-        {
-            try
-            {
-                IsConnecting = true;
-
-                if (!await checkUrlValid(window)) return;
-                if (!await checkUsernameValid(window)) return;
-
-                var baseUrl = formatUrl();
-
-                var authResult = await getAuth(baseUrl);
-
-                var UserId = authResult.SessionInfo.UserId;
-
-                var serverInfo = await getServerInfo(baseUrl, authResult.AccessToken);
-
-                var serverName = ServerName ?? serverInfo.ServerName ?? "Emby Server";
-
-                // Create account info
-                var account = new Account(
-                    serverName,
-                    baseUrl,
-                    UserId,
-                    Username,
-                    Password,
-                    authResult.AccessToken
-                );
-
-                IsConnecting = false;
-                window?.Close(account);
-            }
-            catch (HttpRequestException ex)
-            {
-                var message = ex.StatusCode != null
-                    ? $"Connection error: {(int)ex.StatusCode} - {ex.Message}"
-                    : $"Connection error: {ex.Message}";
-                await flyoutBox(message, window);
-                IsConnecting = false;
-            }
-            catch (TaskCanceledException)
-            {
-                await flyoutBox("Connection timed out", window);
-                IsConnecting = false;
-            }
-            catch (Exception ex)
-            {
-                await flyoutBox($"Error: {ex.Message}", window);
-                IsConnecting = false;
-            }
-        });
-
+        AddAccountCommand = ReactiveCommand.CreateFromTask<Window>(async (window) => await AddAccount(window));
         CloseWindowCommand = ReactiveCommand.Create<Window>(window =>
         {
             window?.Close();
         });
+    }
+
+    private async Task AddAccount(Window window)
+    {
+        try
+        {
+            IsConnecting = true;
+
+            if (!await checkUrlValid(window)) return;
+            if (!await checkUsernameValid(window)) return;
+
+            var baseUrl = formatUrl();
+
+            var newConfig = new Configuration();
+            newConfig.BasePath = baseUrl;
+            newConfig.UserAgent = $"{ClientName}/{Version}";
+            newConfig.Timeout = 5000;
+            var Config = await getAuth(newConfig);
+
+            var serverInfo = await getServerInfo(Config.config);
+
+            var serverName = ServerName ?? serverInfo.ServerName ?? "Emby Server";
+
+            // Create account info
+            var account = new Account(
+                serverName,
+                baseUrl,
+                Config.result.User.Id,
+                Username,
+                Password,
+                Config.result.AccessToken
+            );
+
+            IsConnecting = false;
+            window?.Close(account);
+        }
+        catch (Exception ex)
+        {
+            var message = ex.Message;
+            if (message.StartsWith("Error calling PostUsersAuthenticatebyname:"))
+            {
+                message = message.Split(':', 2)[1].Trim();
+            }
+            await flyoutBox($"Error: {message}", window);
+            IsConnecting = false;
+        }
     }
 
     private async Task<bool> checkUsernameValid(Window window)
@@ -169,94 +163,26 @@ public class AddAccountViewModel : ViewModelBase
         return baseUrl;
     }
 
-    private async Task<AuthResponse> getAuth(string baseUrl)
+    private async Task<(Configuration config, AuthenticationAuthenticationResult result)> getAuth(Configuration config)
     {
-        // Authenticate
-        var authData = new
-        {
-            Username = Username,
-            Pw = Password
-        };
+        var newConfig = config;
 
-        var authContent = new StringContent(
-            JsonSerializer.Serialize(authData),
-            Encoding.UTF8,
-            "application/json");
+        var authData = new AuthenticateUserByName(Username, Password);
+        var userClient = new UserServiceApi(newConfig);
 
-        var authRequest = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl}/Users/AuthenticateByName")
-        {
-            Content = authContent
-        };
+        var authResult = await userClient.PostUsersAuthenticatebynameAsync(authData, getTempAuthHeader());
+        var authHeader = getAuthHeader(authResult);
+        newConfig.DefaultHeader.Add("X-Emby-Authorization", authHeader);
 
-        // Add the X-Emby-Authorization header with the correct format
-        authRequest.Headers.Add("X-Emby-Authorization",
-            $"Emby UserId=\"\", Client=\"{ClientName}\", Device=\"{DeviceName}\", DeviceId=\"{_deviceId}\", Version=\"{Version}\"");
-
-        var authResponse = await _httpClient.SendAsync(authRequest);
-        authResponse.EnsureSuccessStatusCode();
-
-        var authJson = await authResponse.Content.ReadAsStringAsync();
-        
-        var authResult = JsonSerializer.Deserialize<AuthResponse>(authJson);
-
-        return authResult!;
+        return (newConfig, authResult);
     }
 
-    private async Task<ServerInfo> getServerInfo(string baseUrl, string accessToken)
+    private async Task<SystemInfo> getServerInfo(Configuration config)
     {
+        var systemService = new SystemServiceApi(config);
+        var info = await systemService.GetSystemInfoAsync();
 
-
-        var serverInfoRequest = new HttpRequestMessage(HttpMethod.Get, $"{baseUrl}/System/Info")
-        {
-            Headers =
-            {
-                { "X-Emby-Authorization", $"Emby UserId=\"\", Client=\"{ClientName}\", Device=\"{DeviceName}\", DeviceId=\"{_deviceId}\", Version=\"{Version}\", Token=\"{accessToken}\"" }
-            }
-        };
-
-        var serverInfoResponse = await _httpClient.SendAsync(serverInfoRequest);
-        serverInfoResponse.EnsureSuccessStatusCode();
-
-        var serverInfoJson = await serverInfoResponse.Content.ReadAsStringAsync();
-        var serverInfo = JsonSerializer.Deserialize<ServerInfo>(serverInfoJson);
-        return serverInfo!;
-    }
-
-
-    private class AuthResponse
-    {
-        [JsonPropertyName("AccessToken")]
-        public string AccessToken { get; set; } = string.Empty;
-
-        [JsonPropertyName("ServerId")]
-        public string ServerId { get; set; } = string.Empty;
-
-        [JsonPropertyName("User")]
-        public UserInfo User { get; set; } = null!;
-
-        [JsonPropertyName("SessionInfo")]
-        public SessionInfo SessionInfo { get; set; } = null!;
-    }
-
-    private class SessionInfo
-    {
-        [JsonPropertyName("UserId")]
-        public string UserId { get; set; } = string.Empty;
-    }
-
-    private class ServerInfo
-    {
-        [JsonPropertyName("ServerName")]
-        public string ServerName { get; set; } = string.Empty;
-    }
-
-    private class UserInfo
-    {
-        [JsonPropertyName("Id")]
-        public string Id { get; set; } = string.Empty;
-
-        [JsonPropertyName("Name")]
-        public string Name { get; set; } = string.Empty;
+        return info;
     }
 
     private async Task flyoutBox(string message, Window window)
@@ -291,5 +217,15 @@ public class AddAccountViewModel : ViewModelBase
         content.Opacity = 0;
         await Task.Delay(200);
         flyout.Hide();
+    }
+
+    private string getTempAuthHeader()
+    {
+        return $"Emby UserId=\"\", Client=\"{ClientName}\", Device=\"{Environment.MachineName}\", DeviceId=\"{DeviceId}\", Version=\"{Version}\", Token=\"\"";
+    }
+
+    private string getAuthHeader(AuthenticationAuthenticationResult authResult)
+    {
+        return $"Emby UserId=\"{authResult.User.Id}\", Client=\"{authResult.SessionInfo._Client}\", Device=\"{authResult.SessionInfo.DeviceName}\", DeviceId=\"{authResult.SessionInfo.DeviceId}\", Version=\"{Version}\", Token=\"{authResult.AccessToken}\"";
     }
 }
