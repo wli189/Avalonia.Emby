@@ -6,6 +6,7 @@
         <entry key="Avalonia.Emby/App.axaml" value="Avalonia.Emby/Avalonia.Emby.csproj" />
         <entry key="Avalonia.Emby/Icons.axaml" value="Avalonia.Emby/Avalonia.Emby.csproj" />
         <entry key="Avalonia.Emby/Views/AccountInput.axaml" value="Avalonia.Emby/Avalonia.Emby.csproj" />
+        <entry key="Avalonia.Emby/Views/AccountItem.axaml" value="Avalonia.Emby/Avalonia.Emby.csproj" />
         <entry key="Avalonia.Emby/Views/AddAccountWindow.axaml" value="Avalonia.Emby/Avalonia.Emby.csproj" />
         <entry key="Avalonia.Emby/Views/AddServerWindow.axaml" value="Avalonia.Emby/Avalonia.Emby.csproj" />
         <entry key="Avalonia.Emby/Views/LibraryWindow.axaml" value="Avalonia.Emby/Avalonia.Emby.csproj" />

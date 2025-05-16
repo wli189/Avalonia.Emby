@@ -13,7 +13,7 @@ namespace Avalonia.Emby.ViewModels;
 public class MainWindowViewModel : ViewModelBase
 {
     private readonly StorageService _storageService;
-    public ICommand AddServerCommand { get; }
+    public ICommand AddAccountCommand { get; }
     public ObservableCollection<AccountViewModel> ServerList { get; } = new();
     public Interaction<AddAccountViewModel, Account?> ShowDialog { get; }
 
@@ -22,7 +22,7 @@ public class MainWindowViewModel : ViewModelBase
         _storageService = new StorageService();
         ShowDialog = new Interaction<AddAccountViewModel, Account?>();
 
-        AddServerCommand = ReactiveCommand.CreateFromTask(async () =>
+        AddAccountCommand = ReactiveCommand.CreateFromTask(async () =>
         {
             var viewModel = new AddAccountViewModel();
             var result = await ShowDialog.Handle(viewModel);

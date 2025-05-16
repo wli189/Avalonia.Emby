@@ -60,7 +60,7 @@
             
             <Button HorizontalAlignment="Right" 
                     VerticalAlignment="Bottom"
-                    Command="{Binding AddServerCommand}">       
+                    Command="{Binding AddAccountCommand}">       
                 <PathIcon Data="{StaticResource add_regular}" /> 
             </Button>
         </Panel>
