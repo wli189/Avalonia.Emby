@@ -15,14 +15,7 @@ namespace Avalonia.Emby.ViewModels;
 public class AccountViewModel : ViewModelBase
 {
     private readonly Account _account;
-    public Account Account => _account;
-    public string ServerName => _account.ServerName;
-    public string ServerUrl => _account.ServerUrl;
-    public string UserId => _account.UserId;
-    public string Username => _account.Username;
-    public string Password => _account.Password;
-    public string AccessToken => _account.AccessToken;
-    private readonly HttpClient _httpClient = new HttpClient() { Timeout = TimeSpan.FromSeconds(5) };
+    private readonly EmbyAuthenticationService _authService;
     private bool _isConnecting;
     private readonly string _deviceId = Guid.NewGuid().ToString();
     public event EventHandler<Account>? AccountDeleted;
@@ -30,11 +23,20 @@ public class AccountViewModel : ViewModelBase
     public ICommand ConnectServerCommand { get; }
     public ICommand DeleteAccountCommand { get; }
     public ICommand EditAccountCommand { get; }
-    
+
+    public Account Account => _account;
+    public string ServerName => _account.ServerName;
+    public string ServerUrl => _account.ServerUrl;
+    public string UserId => _account.UserId;
+    public string Username => _account.Username;
+    public string Password => _account.Password;
+    public string AccessToken => _account.AccessToken;
+
     public AccountViewModel(Account account)
     {
         _account = account;
-        _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd($"{AddAccountViewModel.ClientName}/{AddAccountViewModel.Version}");
+        _authService = new EmbyAuthenticationService();
+
         ConnectServerCommand = ReactiveCommand.CreateFromTask<Window>(ConnectToServerAsync);
         DeleteAccountCommand = ReactiveCommand.Create<Window>(DeleteAccount);
         EditAccountCommand = ReactiveCommand.CreateFromTask<Window>(async window => await EditAccount());
@@ -81,10 +83,18 @@ public class AccountViewModel : ViewModelBase
             IsConnecting = true;
 
             // Verify server is accessible
-            var request = new HttpRequestMessage(HttpMethod.Get, $"{ServerUrl}/System/Info");
-            request.Headers.Add("X-Emby-Authorization", $"Emby UserId=\"\", Client=\"{AddAccountViewModel.ClientName}\", Device=\"{AddAccountViewModel.DeviceName}\", DeviceId=\"{_deviceId}\", Version=\"{AddAccountViewModel.Version}\", Token=\"{AccessToken}\"");
-            var response = await _httpClient.SendAsync(request);
-            response.EnsureSuccessStatusCode();
+            var serverInfo = await _authService.GetServerInfoAsync(ServerUrl, new AuthResponse
+            {
+                AccessToken = AccessToken,
+                User = new UserDto { Id = UserId },
+                SessionInfo = new SessionInfo
+                {
+                    UserId = UserId,
+                    Client = EmbyAuthenticationService.ClientName,
+                    DeviceName = EmbyAuthenticationService.DeviceName,
+                    DeviceId = Guid.NewGuid().ToString()
+                }
+            });
 
             // Navigate to library window
             var libraryWindow = new Views.LibraryWindow
@@ -93,61 +103,25 @@ public class AccountViewModel : ViewModelBase
             };
             libraryWindow.Show();
             window.Close();
-
-
-            IsConnecting = false;
         }
         catch (HttpRequestException ex)
         {
             var message = ex.StatusCode != null
                 ? $"Connection error: {(int)ex.StatusCode} - {ex.Message}"
                 : $"Connection error: {ex.Message}";
-            await flyoutBox(message, window);
-            IsConnecting = false;
+            await UIHelper.ShowFlyoutMessage(message, window);
         }
         catch (TaskCanceledException)
         {
-            await flyoutBox("Connection timed out", window);
-            IsConnecting = false;
+            await UIHelper.ShowFlyoutMessage("Connection timed out", window);
         }
         catch (Exception ex)
         {
-            await flyoutBox($"Error: {ex.Message}", window);
+            await UIHelper.ShowFlyoutMessage($"Error: {ex.Message}", window);
+        }
+        finally
+        {
             IsConnecting = false;
         }
-    }
-
-    private async Task flyoutBox(string message, Window window)
-    {
-        var flyout = new Flyout
-        {
-            Content = new TextBlock
-            {
-                Text = message,
-                TextWrapping = TextWrapping.Wrap,
-                MaxWidth = 300,
-            },
-            Placement = PlacementMode.Bottom,
-            ShowMode = FlyoutShowMode.Transient,
-            VerticalOffset = 5,
-        };
-
-        var content = (TextBlock)flyout.Content;
-        content.Transitions = new Transitions
-        {
-            new DoubleTransition
-            {
-                Property = TextBlock.OpacityProperty,
-                Duration = TimeSpan.FromSeconds(0.2)
-            }
-        };
-
-        content.Opacity = 0;
-        flyout.ShowAt(window);
-        content.Opacity = 1;
-        await Task.Delay(1000);
-        content.Opacity = 0;
-        await Task.Delay(200);
-        flyout.Hide();
     }
 }

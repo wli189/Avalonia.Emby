@@ -11,7 +11,7 @@ public class AuthResponse
     public string ServerId { get; set; } = string.Empty;
 
     [JsonPropertyName("User")]
-    public UserInfo User { get; set; } = null!;
+    public UserDto User { get; set; } = null!;
 
     [JsonPropertyName("SessionInfo")]
     public SessionInfo SessionInfo { get; set; } = null!;
@@ -38,7 +38,7 @@ public class ServerInfo
     public string ServerName { get; set; } = string.Empty;
 }
 
-public class UserInfo
+public class UserDto
 {
     [JsonPropertyName("Id")]
     public string Id { get; set; } = string.Empty;

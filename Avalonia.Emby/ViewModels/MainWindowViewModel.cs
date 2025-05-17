@@ -6,7 +6,6 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Emby.Models;
-using Avalonia.Emby.Services;
 
 namespace Avalonia.Emby.ViewModels;
 
