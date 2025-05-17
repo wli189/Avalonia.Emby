@@ -94,7 +94,7 @@ public class AccountViewModel : ViewModelBase
             // Try to connect and get server info
             var systemService = new SystemServiceApi(config);
             await systemService.GetSystemInfoAsync();
-            
+
             // Navigate to library window
             var libraryWindow = new Views.LibraryWindow
             {
@@ -108,7 +108,7 @@ public class AccountViewModel : ViewModelBase
         catch (Exception ex)
         {
             var message = ex.Message;
-            if (message.StartsWith("Error calling PostUsersAuthenticatebyname:"))
+            if (message.StartsWith("Error calling GetSystemInfo:"))
             {
                 message = message.Split(':', 2)[1].Trim();
             }

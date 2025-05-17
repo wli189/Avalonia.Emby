@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("EmbyClient.Dotnet")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("4.8.11.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("4.8.11.0+acca15d1bfb7273af9be2ed491a96c7a4648b810")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("4.8.11.0+a1af7fa48c845d17b4ad2d65d14793e1fd1c9201")]
 [assembly: System.Reflection.AssemblyProductAttribute("EmbyClient.Dotnet")]
 [assembly: System.Reflection.AssemblyTitleAttribute("EmbyClient.Dotnet")]
 [assembly: System.Reflection.AssemblyVersionAttribute("4.8.11.0")]

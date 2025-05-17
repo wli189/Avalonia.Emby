@@ -30,6 +30,7 @@ public class AddAccountViewModel : ViewModelBase
     public const string ClientName = "Tsukimi";
     public const string Version = "0.21.0";
     public static string DeviceId = Guid.NewGuid().ToString();
+    private readonly HttpClient _httpClient = new HttpClient() { Timeout = TimeSpan.FromSeconds(5) };
     private Configuration apiConfiguration;
     public ICommand AddAccountCommand { get; }
     public ICommand CloseWindowCommand { get; }
@@ -86,6 +87,7 @@ public class AddAccountViewModel : ViewModelBase
 
             var newConfig = new Configuration();
             newConfig.BasePath = baseUrl;
+            
             newConfig.UserAgent = $"{ClientName}/{Version}";
             newConfig.Timeout = 5000;
             var Config = await getAuth(newConfig);
