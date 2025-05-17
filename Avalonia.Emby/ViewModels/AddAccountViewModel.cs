@@ -28,7 +28,7 @@ public class AddAccountViewModel : ViewModelBase
     public const string ClientName = "Tsukimi";
     public const string DeviceName = "Desktop";
     public const string Version = "0.21.0";
-    private readonly string _deviceId = Guid.NewGuid().ToString();
+    private readonly string DeviceId = Guid.NewGuid().ToString();
     private readonly HttpClient _httpClient = new HttpClient() { Timeout = TimeSpan.FromSeconds(5) };
     public ICommand AddAccountCommand { get; }
     public ICommand CloseWindowCommand { get; }
@@ -62,7 +62,7 @@ public class AddAccountViewModel : ViewModelBase
         get => _isConnecting;
         set => this.RaiseAndSetIfChanged(ref _isConnecting, value);
     }
-    
+
     public AddAccountViewModel()
     {
         _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd($"{ClientName}/{Version}");
@@ -82,7 +82,7 @@ public class AddAccountViewModel : ViewModelBase
 
                 var UserId = authResult.SessionInfo.UserId;
 
-                var serverInfo = await getServerInfo(baseUrl, authResult.AccessToken);
+                var serverInfo = await getServerInfo(baseUrl, authResult);
 
                 var serverName = ServerName ?? serverInfo.ServerName ?? "Emby Server";
 
@@ -185,34 +185,24 @@ public class AddAccountViewModel : ViewModelBase
 
         var authRequest = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl}/Users/AuthenticateByName")
         {
-            Content = authContent
+            Content = authContent,
+            Headers = { { "X-Emby-Authorization", getTempAuthHeader() } }
         };
-
-        // Add the X-Emby-Authorization header with the correct format
-        authRequest.Headers.Add("X-Emby-Authorization",
-            $"Emby UserId=\"\", Client=\"{ClientName}\", Device=\"{DeviceName}\", DeviceId=\"{_deviceId}\", Version=\"{Version}\"");
 
         var authResponse = await _httpClient.SendAsync(authRequest);
         authResponse.EnsureSuccessStatusCode();
 
         var authJson = await authResponse.Content.ReadAsStringAsync();
-        
+
         var authResult = JsonSerializer.Deserialize<AuthResponse>(authJson);
 
         return authResult!;
     }
 
-    private async Task<ServerInfo> getServerInfo(string baseUrl, string accessToken)
+    private async Task<ServerInfo> getServerInfo(string baseUrl, AuthResponse authResult)
     {
-
-
         var serverInfoRequest = new HttpRequestMessage(HttpMethod.Get, $"{baseUrl}/System/Info")
-        {
-            Headers =
-            {
-                { "X-Emby-Authorization", $"Emby UserId=\"\", Client=\"{ClientName}\", Device=\"{DeviceName}\", DeviceId=\"{_deviceId}\", Version=\"{Version}\", Token=\"{accessToken}\"" }
-            }
-        };
+        { Headers = { { "X-Emby-Authorization", getAuthHeader(authResult) } } };
 
         var serverInfoResponse = await _httpClient.SendAsync(serverInfoRequest);
         serverInfoResponse.EnsureSuccessStatusCode();
@@ -220,43 +210,6 @@ public class AddAccountViewModel : ViewModelBase
         var serverInfoJson = await serverInfoResponse.Content.ReadAsStringAsync();
         var serverInfo = JsonSerializer.Deserialize<ServerInfo>(serverInfoJson);
         return serverInfo!;
-    }
-
-
-    private class AuthResponse
-    {
-        [JsonPropertyName("AccessToken")]
-        public string AccessToken { get; set; } = string.Empty;
-
-        [JsonPropertyName("ServerId")]
-        public string ServerId { get; set; } = string.Empty;
-
-        [JsonPropertyName("User")]
-        public UserInfo User { get; set; } = null!;
-
-        [JsonPropertyName("SessionInfo")]
-        public SessionInfo SessionInfo { get; set; } = null!;
-    }
-
-    private class SessionInfo
-    {
-        [JsonPropertyName("UserId")]
-        public string UserId { get; set; } = string.Empty;
-    }
-
-    private class ServerInfo
-    {
-        [JsonPropertyName("ServerName")]
-        public string ServerName { get; set; } = string.Empty;
-    }
-
-    private class UserInfo
-    {
-        [JsonPropertyName("Id")]
-        public string Id { get; set; } = string.Empty;
-
-        [JsonPropertyName("Name")]
-        public string Name { get; set; } = string.Empty;
     }
 
     private async Task flyoutBox(string message, Window window)
@@ -291,5 +244,15 @@ public class AddAccountViewModel : ViewModelBase
         content.Opacity = 0;
         await Task.Delay(200);
         flyout.Hide();
+    }
+
+    private string getTempAuthHeader()
+    {
+        return $"Emby UserId=\"\", Client=\"{ClientName}\", Device=\"{Environment.MachineName}\", DeviceId=\"{DeviceId}\", Version=\"{Version}\", Token=\"\"";
+    }
+
+    private string getAuthHeader(AuthResponse authResult)
+    {
+        return $"Emby UserId=\"{authResult.User.Id}\", Client=\"{authResult.SessionInfo.Client}\", Device=\"{authResult.SessionInfo.DeviceName}\", DeviceId=\"{authResult.SessionInfo.DeviceId}\", Version=\"{Version}\", Token=\"{authResult.AccessToken}\"";
     }
 }
