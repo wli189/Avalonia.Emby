@@ -30,6 +30,9 @@ public class SessionInfo
 
     [JsonPropertyName("DeviceId")]
     public string DeviceId { get; set; } = string.Empty;
+    
+    [JsonPropertyName("ApplicationVersion")]
+    public string ApplicationVersion { get; set; } = string.Empty;
 }
 
 public class ServerInfo
