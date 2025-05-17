@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Avalonia.Emby.Models;
 
-namespace Avalonia.Emby.Services;
+namespace Avalonia.Emby.Models;
 
 public class StorageService
 {
