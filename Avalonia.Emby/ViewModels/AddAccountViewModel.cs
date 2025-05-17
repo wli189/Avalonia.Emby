@@ -1,20 +1,10 @@
 ﻿using System;
-using System.Collections.ObjectModel;
 using System.Windows.Input;
 using System.Net.Http;
-using System.Text.Json;
-using System.Text;
 using System.Threading.Tasks;
 using Avalonia.Controls;
-using Avalonia.Controls.Primitives;
-using Avalonia.Platform;
 using ReactiveUI;
-using System.Text.Json.Serialization;
-using Avalonia.Animation;
 using Avalonia.Emby.Models;
-using Avalonia.Media;
-using Avalonia.Styling;
-using Emby.ApiClient.Model;
 
 namespace Avalonia.Emby.ViewModels;
 
@@ -25,11 +15,8 @@ public class AddAccountViewModel : ViewModelBase
     private string _serverUrl;
     private string _serverName;
     private bool _isConnecting;
-    public const string ClientName = "Tsukimi";
-    public const string DeviceName = "Desktop";
-    public const string Version = "0.21.0";
-    private readonly string _deviceId = Guid.NewGuid().ToString();
-    private readonly HttpClient _httpClient = new HttpClient() { Timeout = TimeSpan.FromSeconds(5) };
+    private readonly EmbyAuthenticationService _authService;
+
     public ICommand AddAccountCommand { get; }
     public ICommand CloseWindowCommand { get; }
 
@@ -62,234 +49,74 @@ public class AddAccountViewModel : ViewModelBase
         get => _isConnecting;
         set => this.RaiseAndSetIfChanged(ref _isConnecting, value);
     }
-    
+
     public AddAccountViewModel()
     {
-        _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd($"{ClientName}/{Version}");
+        _authService = new EmbyAuthenticationService();
 
-        AddAccountCommand = ReactiveCommand.CreateFromTask<Window>(async (window) =>
-        {
-            try
-            {
-                IsConnecting = true;
-
-                if (!await checkUrlValid(window)) return;
-                if (!await checkUsernameValid(window)) return;
-
-                var baseUrl = formatUrl();
-
-                var authResult = await getAuth(baseUrl);
-
-                var UserId = authResult.SessionInfo.UserId;
-
-                var serverInfo = await getServerInfo(baseUrl, authResult.AccessToken);
-
-                var serverName = ServerName ?? serverInfo.ServerName ?? "Emby Server";
-
-                // Create account info
-                var account = new Account(
-                    serverName,
-                    baseUrl,
-                    UserId,
-                    Username,
-                    Password,
-                    authResult.AccessToken
-                );
-
-                IsConnecting = false;
-                window?.Close(account);
-            }
-            catch (HttpRequestException ex)
-            {
-                var message = ex.StatusCode != null
-                    ? $"Connection error: {(int)ex.StatusCode} - {ex.Message}"
-                    : $"Connection error: {ex.Message}";
-                await flyoutBox(message, window);
-                IsConnecting = false;
-            }
-            catch (TaskCanceledException)
-            {
-                await flyoutBox("Connection timed out", window);
-                IsConnecting = false;
-            }
-            catch (Exception ex)
-            {
-                await flyoutBox($"Error: {ex.Message}", window);
-                IsConnecting = false;
-            }
-        });
-
-        CloseWindowCommand = ReactiveCommand.Create<Window>(window =>
-        {
-            window?.Close();
-        });
+        AddAccountCommand = ReactiveCommand.CreateFromTask<Window>(AddAccountAsync);
+        CloseWindowCommand = ReactiveCommand.Create<Window>(window => window?.Close());
     }
 
-    private async Task<bool> checkUsernameValid(Window window)
+    private async Task AddAccountAsync(Window window)
     {
-        if (string.IsNullOrWhiteSpace(Username))
+        try
         {
-            await flyoutBox("Please enter a username", window);
-            IsConnecting = false;
-            return false;
+            IsConnecting = true;
+
+            if (!await ValidateInput(window)) return;
+
+            var baseUrl = _authService.FormatServerUrl(ServerUrl);
+            var authResult = await _authService.AuthenticateByNameAsync(baseUrl, Username, Password);
+            var serverInfo = await _authService.GetServerInfoAsync(baseUrl, authResult);
+
+            var serverName = ServerName ?? serverInfo.ServerName ?? "Emby Server";
+            var account = new Account(
+                serverName,
+                baseUrl,
+                authResult.SessionInfo.UserId,
+                Username,
+                Password,
+                authResult.AccessToken
+            );
+
+            window?.Close(account);
         }
-        return true;
+        catch (HttpRequestException ex)
+        {
+            var message = ex.StatusCode != null
+                ? $"Connection error: {(int)ex.StatusCode} - {ex.Message}"
+                : $"Connection error: {ex.Message}";
+            await UIHelper.ShowFlyoutMessage(message, window);
+        }
+        catch (TaskCanceledException)
+        {
+            await UIHelper.ShowFlyoutMessage("Connection timed out", window);
+        }
+        catch (Exception ex)
+        {
+            await UIHelper.ShowFlyoutMessage($"Error: {ex.Message}", window);
+        }
+        finally
+        {
+            IsConnecting = false;
+        }
     }
 
-    private async Task<bool> checkUrlValid(Window window)
+    private async Task<bool> ValidateInput(Window window)
     {
         if (string.IsNullOrWhiteSpace(ServerUrl))
         {
-            await flyoutBox("Please enter a server URL", window);
-            IsConnecting = false;
+            await UIHelper.ShowFlyoutMessage("Please enter a server URL", window);
             return false;
         }
+
+        if (string.IsNullOrWhiteSpace(Username))
+        {
+            await UIHelper.ShowFlyoutMessage("Please enter a username", window);
+            return false;
+        }
+
         return true;
-    }
-
-    private string formatUrl()
-    {
-        // Format server URL
-        var baseUrl = ServerUrl.Trim();
-        if (!baseUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
-            !baseUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
-        {
-            baseUrl = "https://" + baseUrl; // Default to HTTPS for security
-        }
-
-        // Parse the URL and check if port is specified
-        var uri = new Uri(baseUrl);
-        if (uri.IsDefaultPort)
-        {
-            // No port specified or using default port, add explicit port
-            var port = uri.Scheme.ToLower() == "http" ? "80" : "443";
-            baseUrl = $"{uri.Scheme}://{uri.Host}:{port}";
-        }
-
-        return baseUrl;
-    }
-
-    private async Task<AuthResponse> getAuth(string baseUrl)
-    {
-        // Authenticate
-        var authData = new
-        {
-            Username = Username,
-            Pw = Password
-        };
-
-        var authContent = new StringContent(
-            JsonSerializer.Serialize(authData),
-            Encoding.UTF8,
-            "application/json");
-
-        var authRequest = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl}/Users/AuthenticateByName")
-        {
-            Content = authContent
-        };
-
-        // Add the X-Emby-Authorization header with the correct format
-        authRequest.Headers.Add("X-Emby-Authorization",
-            $"Emby UserId=\"\", Client=\"{ClientName}\", Device=\"{DeviceName}\", DeviceId=\"{_deviceId}\", Version=\"{Version}\"");
-
-        var authResponse = await _httpClient.SendAsync(authRequest);
-        authResponse.EnsureSuccessStatusCode();
-
-        var authJson = await authResponse.Content.ReadAsStringAsync();
-        
-        var authResult = JsonSerializer.Deserialize<AuthResponse>(authJson);
-
-        return authResult!;
-    }
-
-    private async Task<ServerInfo> getServerInfo(string baseUrl, string accessToken)
-    {
-
-
-        var serverInfoRequest = new HttpRequestMessage(HttpMethod.Get, $"{baseUrl}/System/Info")
-        {
-            Headers =
-            {
-                { "X-Emby-Authorization", $"Emby UserId=\"\", Client=\"{ClientName}\", Device=\"{DeviceName}\", DeviceId=\"{_deviceId}\", Version=\"{Version}\", Token=\"{accessToken}\"" }
-            }
-        };
-
-        var serverInfoResponse = await _httpClient.SendAsync(serverInfoRequest);
-        serverInfoResponse.EnsureSuccessStatusCode();
-
-        var serverInfoJson = await serverInfoResponse.Content.ReadAsStringAsync();
-        var serverInfo = JsonSerializer.Deserialize<ServerInfo>(serverInfoJson);
-        return serverInfo!;
-    }
-
-
-    private class AuthResponse
-    {
-        [JsonPropertyName("AccessToken")]
-        public string AccessToken { get; set; } = string.Empty;
-
-        [JsonPropertyName("ServerId")]
-        public string ServerId { get; set; } = string.Empty;
-
-        [JsonPropertyName("User")]
-        public UserInfo User { get; set; } = null!;
-
-        [JsonPropertyName("SessionInfo")]
-        public SessionInfo SessionInfo { get; set; } = null!;
-    }
-
-    private class SessionInfo
-    {
-        [JsonPropertyName("UserId")]
-        public string UserId { get; set; } = string.Empty;
-    }
-
-    private class ServerInfo
-    {
-        [JsonPropertyName("ServerName")]
-        public string ServerName { get; set; } = string.Empty;
-    }
-
-    private class UserInfo
-    {
-        [JsonPropertyName("Id")]
-        public string Id { get; set; } = string.Empty;
-
-        [JsonPropertyName("Name")]
-        public string Name { get; set; } = string.Empty;
-    }
-
-    private async Task flyoutBox(string message, Window window)
-    {
-        var flyout = new Flyout
-        {
-            Content = new TextBlock
-            {
-                Text = message,
-                TextWrapping = TextWrapping.Wrap,
-                MaxWidth = 300,
-            },
-            Placement = PlacementMode.Bottom,
-            ShowMode = FlyoutShowMode.Transient,
-            VerticalOffset = 5,
-        };
-
-        var content = (TextBlock)flyout.Content;
-        content.Transitions = new Transitions
-        {
-            new DoubleTransition
-            {
-                Property = TextBlock.OpacityProperty,
-                Duration = TimeSpan.FromSeconds(0.2)
-            }
-        };
-
-        content.Opacity = 0;
-        flyout.ShowAt(window);
-        content.Opacity = 1;
-        await Task.Delay(1000);
-        content.Opacity = 0;
-        await Task.Delay(200);
-        flyout.Hide();
     }
 }

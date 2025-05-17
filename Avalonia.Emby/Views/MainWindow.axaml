@@ -47,7 +47,7 @@
                    HorizontalAlignment="Center"
                    VerticalAlignment="Top"/>
             
-            <ListBox ItemsSource="{Binding ServerList}" 
+            <ListBox ItemsSource="{Binding AccountList}" 
                      x:DataType="vm:MainWindowViewModel"
                      HorizontalAlignment="Center"
                      VerticalAlignment="Top"

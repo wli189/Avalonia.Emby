@@ -49,6 +49,7 @@
                     Margin="0 20 0 0"
                     Width="100"
                     HorizontalContentAlignment="Center"
+                    VerticalContentAlignment="Center"
                     IsDefault="True"/>
             
             <Button Content="Cancel"
@@ -58,6 +59,7 @@
                     Margin="0 20 0 0"
                     Width="100"
                     HorizontalContentAlignment="Center"
+                    VerticalContentAlignment="Center"
                     IsCancel="True"/>
         </StackPanel>
         
