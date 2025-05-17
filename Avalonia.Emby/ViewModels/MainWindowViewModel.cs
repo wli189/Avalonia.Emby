@@ -13,7 +13,7 @@ public class MainWindowViewModel : ViewModelBase
 {
     private readonly StorageService _storageService;
     public ICommand AddAccountCommand { get; }
-    public ObservableCollection<AccountViewModel> ServerList { get; } = new();
+    public ObservableCollection<AccountViewModel> AccountList { get; } = new();
     public Interaction<AddAccountViewModel, Account?> ShowDialog { get; }
 
     public MainWindowViewModel()
@@ -23,20 +23,20 @@ public class MainWindowViewModel : ViewModelBase
 
         AddAccountCommand = ReactiveCommand.CreateFromTask(async () =>
         {
-            var viewModel = new AddAccountViewModel();
-            var result = await ShowDialog.Handle(viewModel);
+            var addAccountVm = new AddAccountViewModel();
+            var result = await ShowDialog.Handle(addAccountVm);
 
             if (result != null)
             {
-                var serverVm = new AccountViewModel(result);
-                serverVm.AccountDeleted += OnAccountDeleted;
-                ServerList.Add(serverVm);
-                await SaveServers();
+                var accountVm = new AccountViewModel(result);
+                accountVm.AccountDeleted += OnAccountDeleted;
+                AccountList.Add(accountVm);
+                await SaveAccounts();
             }
         });
 
         // Load servers when the view model is created
-        _ = LoadServers();
+        _ = LoadAccounts();
     }
 
     private async void OnAccountDeleted(object? sender, Account account)
@@ -44,25 +44,25 @@ public class MainWindowViewModel : ViewModelBase
         if (sender is AccountViewModel accountVm)
         {
             accountVm.AccountDeleted -= OnAccountDeleted;
-            ServerList.Remove(accountVm);
-            await SaveServers();
+            AccountList.Remove(accountVm);
+            await SaveAccounts();
         }
     }
 
-    private async Task LoadServers()
+    private async Task LoadAccounts()
     {
-        var servers = await _storageService.LoadServersAsync();
-        foreach (var server in servers)
+        var accounts = await _storageService.LoadAccountsAsync();
+        foreach (var account in accounts)
         {
-            var serverVm = new AccountViewModel(server);
-            serverVm.AccountDeleted += OnAccountDeleted;
-            ServerList.Add(serverVm);
+            var accountVM = new AccountViewModel(account);
+            accountVM.AccountDeleted += OnAccountDeleted;
+            AccountList.Add(accountVM);
         }
     }
 
-    private async Task SaveServers()
+    private async Task SaveAccounts()
     {
-        var servers = ServerList.Select(vm => vm.Account).ToList();
-        await _storageService.SaveServersAsync(servers);
+        var accounts = AccountList.Select(vm => vm.Account).ToList();
+        await _storageService.SaveAccountsAsync(accounts);
     }
 }

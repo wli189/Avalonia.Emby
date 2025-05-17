@@ -67,7 +67,7 @@ public class AddAccountViewModel : ViewModelBase
             if (!await ValidateInput(window)) return;
 
             var baseUrl = _authService.FormatServerUrl(ServerUrl);
-            var authResult = await _authService.AuthenticateAsync(baseUrl, Username, Password);
+            var authResult = await _authService.AuthenticateByNameAsync(baseUrl, Username, Password);
             var serverInfo = await _authService.GetServerInfoAsync(baseUrl, authResult);
 
             var serverName = ServerName ?? serverInfo.ServerName ?? "Emby Server";
