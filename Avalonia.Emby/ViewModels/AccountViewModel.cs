@@ -17,7 +17,6 @@ public class AccountViewModel : ViewModelBase
     private readonly Account _account;
     private readonly EmbyAuthenticationService _authService;
     private bool _isConnecting;
-    private readonly string _deviceId = Guid.NewGuid().ToString();
     public event EventHandler<Account>? AccountDeleted;
     public Interaction<AddAccountViewModel, Account?> ShowDialog { get; } = new();
     public ICommand ConnectServerCommand { get; }
@@ -92,7 +91,7 @@ public class AccountViewModel : ViewModelBase
                     UserId = UserId,
                     Client = EmbyAuthenticationService.ClientName,
                     DeviceName = EmbyAuthenticationService.DeviceName,
-                    DeviceId = Guid.NewGuid().ToString()
+                    DeviceId = EmbyAuthenticationService.DeviceId,
                 }
             });
 

@@ -12,10 +12,12 @@ public class EmbyAuthenticationService
     public const string ClientName = "Tsukimi";
     public const string DeviceName = "Desktop";
     public const string Version = "0.21.0";
-    private readonly string DeviceId = Guid.NewGuid().ToString();
+    public static string DeviceId;
 
     public EmbyAuthenticationService()
     {
+        var storageService = new StorageService();
+        DeviceId = storageService.GetDeviceId();
         _httpClient = new HttpClient() { Timeout = TimeSpan.FromSeconds(5) };
         _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd($"{ClientName}/{Version}");
     }
@@ -39,7 +41,7 @@ public class EmbyAuthenticationService
         return baseUrl;
     }
 
-    public async Task<AuthResponse> AuthenticateAsync(string baseUrl, string username, string password)
+    public async Task<AuthResponse> AuthenticateByNameAsync(string baseUrl, string username, string password)
     {
         var authData = new
         {
@@ -84,6 +86,6 @@ public class EmbyAuthenticationService
 
     private string GetAuthHeader(AuthResponse authResult)
     {
-        return $"Emby UserId=\"{authResult.User.Id}\", Client=\"{authResult.SessionInfo.Client}\", Device=\"{authResult.SessionInfo.DeviceName}\", DeviceId=\"{authResult.SessionInfo.DeviceId}\", Version=\"{Version}\", Token=\"{authResult.AccessToken}\"";
+        return $"Emby UserId=\"{authResult.User.Id}\", Client=\"{authResult.SessionInfo.Client}\", Device=\"{authResult.SessionInfo.DeviceName}\", DeviceId=\"{authResult.SessionInfo.DeviceId}\", Version=\"{authResult.SessionInfo.ApplicationVersion}\", Token=\"{authResult.AccessToken}\"";
     }
 }

@@ -6,9 +6,15 @@ using System.Threading.Tasks;
 
 namespace Avalonia.Emby.Models;
 
+public class Config
+{
+    public string DeviceId { get; set; }
+}
+
 public class StorageService
 {
     private readonly string _storageFile;
+    private readonly string _configFile;
 
     public StorageService()
     {
@@ -21,18 +27,42 @@ public class StorageService
         Directory.CreateDirectory(appDataPath);
 
         _storageFile = Path.Combine(appDataPath, "servers.json");
+        _configFile = Path.Combine(appDataPath, "config.json");
     }
 
-    public async Task SaveServersAsync(IEnumerable<Account> servers)
+    public string GetDeviceId()
     {
-        var json = JsonSerializer.Serialize(servers, new JsonSerializerOptions
+        Config config;
+
+        if (File.Exists(_configFile))
+        {
+            var json = File.ReadAllText(_configFile);
+            config = JsonSerializer.Deserialize<Config>(json) ?? new Config();
+        }
+        else
+        {
+            config = new Config();
+        }
+
+        if (string.IsNullOrEmpty(config.DeviceId))
+        {
+            config.DeviceId = Guid.NewGuid().ToString(); // Generate a new deviceId
+            File.WriteAllText(_configFile, JsonSerializer.Serialize(config)); // Save it
+        }
+
+        return config.DeviceId;
+    }
+
+    public async Task SaveAccountsAsync(IEnumerable<Account> accounts)
+    {
+        var json = JsonSerializer.Serialize(accounts, new JsonSerializerOptions
         {
             WriteIndented = true
         });
         await File.WriteAllTextAsync(_storageFile, json);
     }
 
-    public async Task<List<Account>> LoadServersAsync()
+    public async Task<List<Account>> LoadAccountsAsync()
     {
         if (!File.Exists(_storageFile))
         {
