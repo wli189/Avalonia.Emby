@@ -13,7 +13,7 @@ public class Config
 
 public class StorageService
 {
-    private readonly string _storageFile;
+    private readonly string _accountFile;
     private readonly string _configFile;
 
     public StorageService()
@@ -26,7 +26,7 @@ public class StorageService
         // Create directory if it doesn't exist
         Directory.CreateDirectory(appDataPath);
 
-        _storageFile = Path.Combine(appDataPath, "servers.json");
+        _accountFile = Path.Combine(appDataPath, "accounts.json");
         _configFile = Path.Combine(appDataPath, "config.json");
     }
 
@@ -59,17 +59,17 @@ public class StorageService
         {
             WriteIndented = true
         });
-        await File.WriteAllTextAsync(_storageFile, json);
+        await File.WriteAllTextAsync(_accountFile, json);
     }
 
     public async Task<List<Account>> LoadAccountsAsync()
     {
-        if (!File.Exists(_storageFile))
+        if (!File.Exists(_accountFile))
         {
             return new List<Account>();
         }
 
-        var json = await File.ReadAllTextAsync(_storageFile);
+        var json = await File.ReadAllTextAsync(_accountFile);
         return JsonSerializer.Deserialize<List<Account>>(json) ?? new List<Account>();
     }
 }
