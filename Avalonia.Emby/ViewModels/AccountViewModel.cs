@@ -18,6 +18,7 @@ public class AccountViewModel : ViewModelBase
     private readonly EmbyAuthenticationService _authService;
     private bool _isConnecting;
     public event EventHandler<Account>? AccountDeleted;
+    public event EventHandler<Account>? LibraryRequested;
     public Interaction<AddAccountViewModel, Account?> ShowDialog { get; } = new();
     public ICommand ConnectServerCommand { get; }
     public ICommand DeleteAccountCommand { get; }
@@ -95,13 +96,8 @@ public class AccountViewModel : ViewModelBase
                 }
             });
 
-            // Navigate to library window
-            var libraryWindow = new Views.LibraryWindow
-            {
-                DataContext = new LibraryWindowViewModel(_account)
-            };
-            libraryWindow.Show();
-            window.Close();
+            // Notify that library view should be shown
+            LibraryRequested?.Invoke(this, _account);
         }
         catch (HttpRequestException ex)
         {

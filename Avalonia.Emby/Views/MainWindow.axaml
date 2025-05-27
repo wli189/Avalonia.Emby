@@ -33,45 +33,50 @@
             </ExperimentalAcrylicBorder.Material>
         </ExperimentalAcrylicBorder>
         
-        <Label Content="Avalonia.Emby"
-               HorizontalAlignment="Center"
-               VerticalAlignment="Top"
-               Margin="0, 5, 0, 0"
-               FontFamily="Arial"/>
-        
-        <Panel Margin="40">
-            <Label Content="Server List" 
-                   FontSize="24"
-                   FontFamily="Arial"
-                   FontWeight="SemiBold"
+        <Panel IsVisible="{Binding !IsLibraryViewVisible}">
+            <Label Content="Avalonia.Emby"
                    HorizontalAlignment="Center"
-                   VerticalAlignment="Top"/>
+                   VerticalAlignment="Top"
+                   Margin="0, 5, 0, 0"
+                   FontFamily="Arial"/>
             
-            <ListBox ItemsSource="{Binding AccountList}" 
-                     x:DataType="vm:MainWindowViewModel"
-                     HorizontalAlignment="Center"
-                     VerticalAlignment="Top"
-                     Margin="40"
-                     CornerRadius="15"
-                     Background="Transparent">
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <views:AccountItem/>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-                <ListBox.Styles>
-                    <Style Selector="ListBoxItem">
-                        <Setter Property="Padding" Value="0"/>
-                    </Style>
-                </ListBox.Styles>
-            </ListBox>
-            
-            <Button HorizontalAlignment="Right" 
-                    VerticalAlignment="Bottom"
-                    Command="{Binding AddAccountCommand}">       
-                <PathIcon Data="{StaticResource add_regular}" /> 
-            </Button>
+            <Panel Margin="40">
+                <Label Content="Server List" 
+                       FontSize="24"
+                       FontFamily="Arial"
+                       FontWeight="SemiBold"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Top"/>
+                
+                <ListBox ItemsSource="{Binding AccountList}" 
+                         x:DataType="vm:MainWindowViewModel"
+                         HorizontalAlignment="Center"
+                         VerticalAlignment="Top"
+                         Margin="40"
+                         CornerRadius="15"
+                         Background="Transparent">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <views:AccountItem/>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                    <ListBox.Styles>
+                        <Style Selector="ListBoxItem">
+                            <Setter Property="Padding" Value="0"/>
+                        </Style>
+                    </ListBox.Styles>
+                </ListBox>
+                
+                <Button HorizontalAlignment="Right" 
+                        VerticalAlignment="Bottom"
+                        Command="{Binding AddAccountCommand}">       
+                    <PathIcon Data="{StaticResource add_regular}" /> 
+                </Button>
+            </Panel>
         </Panel>
+
+        <ContentControl Content="{Binding CurrentView}"
+                       IsVisible="{Binding IsLibraryViewVisible}"/>
     </Panel>
 
 </Window>
